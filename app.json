@@ -1,10 +1,17 @@
 {
   "expo": {
     "name": "Geopix",
+    "plugins": ["expo-camera"],
     "slug": "Geopix",
     "version": "1.0.0",
     "assetBundlePatterns": [
       "**/*"
-    ]
+    ],
+    "ios": {
+      "bundleIdentifier": "app.geopix"
+    },
+    "android": {
+      "package": "app.geopix"
+    }
   }
 }
