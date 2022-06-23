@@ -21,7 +21,7 @@ export const CameraView = () => {
       }
       return (
         <View style={{ flex: 1 }}>
-          <Camera type={type}>
+          <Camera type={type} style={{ flex: 1 }}>
             <View>
               <TouchableOpacity
                 onPress={() => {

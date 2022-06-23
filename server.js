@@ -1,18 +1,26 @@
 import Realm from 'realm';
-import {UserSchema} from './UserSchema';
+//import {UserSchema} from './UserSchema';
 
 // place your RealmApp ID here
 const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
 
 // can implement inBuilt JWT, Google, Facebook, Apple Authentication Flow.
-const credentials = Realm.Credentials.anonymous(); // LoggingIn as Anonymous User. 
+iconst credentials = Realm.Credentials.emailPassword(
+  "jacobmolson51002@gmail.com",
+  "Qweruiop1535!"
+); // LoggingIn as Anonymous User. 
 
 getRealm = async () => {
 
-  console.log("this is working");
+  console.log("this is now working");
 
   // loggedIn as anonymous user
-  const loggedInUser = await app.logIn(credentials);
+  try{
+    const loggedInUser = await app.logIn(credentials);
+  }catch(err){
+    console.log(err)
+  }
+
   
   // MongoDB RealmConfiguration
   /*const configuration = {
@@ -24,12 +32,11 @@ getRealm = async () => {
   };*/
 
   const mongodb = app.currentUser.mongoClient('mongodb-atlas');
-  const geopics = mongodb.db('geopics').collection('public');
+  const geopics = await mongodb.db('geopics').collection('public');
   const test = await geopics.findOne({ pic: "urltopic" });
   console.log(test);
 
   //return Realm.open(configuration);
-  return test;
 }
 
 export default getRealm;
