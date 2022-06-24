@@ -18,5 +18,5 @@ const App = () =>
   ) : (
     <AppWrapperNonSync />
   );*/
-  (<Map />);
+  (<CameraView />);
 registerRootComponent(App);

@@ -1,16 +1,20 @@
-import Realm from 'realm';
+//import Realm from 'realm';
+import { Realm } from '@realm/react';
 //import {UserSchema} from './UserSchema';
 
 // place your RealmApp ID here
 const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
 
 // can implement inBuilt JWT, Google, Facebook, Apple Authentication Flow.
-iconst credentials = Realm.Credentials.emailPassword(
+/*const credentials = Realm.Credentials.emailPassword(
   "jacobmolson51002@gmail.com",
   "Qweruiop1535!"
-); // LoggingIn as Anonymous User. 
+); // LoggingIn as Anonymous User. */
 
+//console.log(credentials);
+const credentials = Realm.Credentials.anonymous();
 getRealm = async () => {
+
 
   console.log("this is now working");
 
@@ -18,7 +22,7 @@ getRealm = async () => {
   try{
     const loggedInUser = await app.logIn(credentials);
   }catch(err){
-    console.log(err)
+    console.log(err);
   }
 
   
