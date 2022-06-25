@@ -7,7 +7,7 @@ import {AppWrapperSync} from './app/AppWrapperSync';
 import {SYNC_CONFIG} from './sync.config';
 import {Map} from './views/Map';
 import {CameraView} from './views/CameraView';
-//import {MainApp} from './MainApp'; 
+import {MainApp} from './MainApp'; 
 import { View, Text } from 'react-native';
 
 //import {MapView} from 'react-native-maps';
@@ -18,5 +18,5 @@ const App = () =>
   ) : (
     <AppWrapperNonSync />
   );*/
-  (<CameraView />);
+  (<MainApp />);
 registerRootComponent(App);

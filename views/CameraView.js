@@ -23,7 +23,7 @@ export const CameraView = () => {
 
     const takePicture = async () => {
       if(camera){
-        const pic = await camera.takePictureAsync();
+        const pic = await camera.takePictureAsync({quality: 0.5});
         setPicUrl(pic.uri);
         setPreviewVisible(true);
       }
@@ -128,7 +128,7 @@ export const CameraView = () => {
                 <TouchableOpacity 
                   style={{ bottom: 0, borderRadius: 50, width: 50, height: 50, backgroundColor: 'fff' }}
                   onPress={takePicture} >
-                  <Text>This is working</Text>
+                  <Text style={{ color: 'white' }}>This is working</Text>
                 </TouchableOpacity>
               </View>
             </View>
