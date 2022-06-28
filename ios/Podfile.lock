@@ -409,6 +409,8 @@ PODS:
   - RealmJS (10.19.1):
     - GCDWebServer
     - React
+  - RNCAsyncStorage (1.17.7):
+    - React-Core
   - RNScreens (3.11.1):
     - React-Core
     - React-RCTImage
@@ -471,6 +473,7 @@ DEPENDENCIES:
   - React-runtimeexecutor (from `../node_modules/react-native/ReactCommon/runtimeexecutor`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - RealmJS (from `../node_modules/realm`)
+  - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - RNScreens (from `../node_modules/react-native-screens`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
@@ -589,6 +592,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   RealmJS:
     :path: "../node_modules/realm"
+  RNCAsyncStorage:
+    :path: "../node_modules/@react-native-async-storage/async-storage"
   RNScreens:
     :path: "../node_modules/react-native-screens"
   Yoga:
@@ -652,6 +657,7 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: b960b687d2dfef0d3761fbb187e01812ebab8b23
   ReactCommon: 095366164a276d91ea704ce53cb03825c487a3f2
   RealmJS: ce6a1ec0966cfc819b5825a8e946968a996057e2
+  RNCAsyncStorage: d81ee5c3db1060afd49ea7045ad460eff82d2b7d
   RNScreens: 4d83613b50b74ed277026375dc0810893b0c347f
   Yoga: 99652481fcd320aefa4a7ef90095b95acd181952
 
