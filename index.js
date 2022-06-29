@@ -6,7 +6,7 @@ import {registerRootComponent} from 'expo'
 import {AppWrapperNonSync} from './app/AppWrapperNonSync';
 import {AppWrapperSync} from './app/AppWrapperSync';
 import {SYNC_CONFIG} from './sync.config';
-//import {Map} from './views/Map';
+import { Map } from './views/Map';
 //import {CameraView} from './views/CameraView';
 import { AppContainer } from './AppContainer'; 
 //import {View, Text} from 'react-native';
@@ -22,15 +22,19 @@ const App = () => {
   const [userLoggedIn, setUserLoggedIn] = useState(false);
 
 
-  useEffect(() => {
-    async function prepare() {
+  const prepare = async () => {
       try {
         await SplashScreen.preventAutoHideAsync();
 
-        const loginCredentials = await AsyncStorage.getItem('loggedInUser');
+        const loginCredentials = null;
+        await AsyncStorage.removeItem('email');
+        await AsyncStorage.removeItem('userID');
+        await AsyncStorage.removeItem('password');
+
+        //const loginCredentials = await AsyncStorage.getItem('userID');
+
 
         if(loginCredentials !== null){
-          console.log('working');
           setUserLoggedIn(true);
         }else{
           console.log("user not found");
@@ -40,11 +44,11 @@ const App = () => {
       } finally {
         setAppIsReady(true);
       }
-    }
-  });
+    };
 
 
   const onLayoutRootView = useCallback(async () => {
+    prepare();
     if(appIsReady){
       console.log("splash screen ready");
       await SplashScreen.hideAsync();
@@ -55,7 +59,7 @@ const App = () => {
       <Provider store={Store}>
         <View onLayout={onLayoutRootView} style={{ flex: 1 }} > 
           {userLoggedIn ? (
-            <AppContainer />
+            <Map />
           ) : (
             <Login />
           )}

@@ -1,7 +1,9 @@
 import { Realm } from '@realm/react';
+import { userSchema } from './schemas';
 import { useDispatch } from 'react-redux';
 import { setUserId } from '../redux/actions';
 import { useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 //initialize realm app
 const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
@@ -15,17 +17,61 @@ const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
 const credentials = Realm.Credentials.anonymous();
 
 //function to login the user
-export const loginUser = () => {
-  const dispatch = useDispatch();
-  useEffect(() => {
-    (async () => {
+export const logUserIn = async (email, password) => {
+      //const dispatch = useDispatch();
       //login the user
-      const loggedInUser = await app.logIn(credentials);
+      //const credentials = await Realm.Credentials.emailPassword("jacobmolson");
+      const credentials = Realm.Credentials.emailPassword(
+        email,
+        password
+      );
+      try {
+        const loggedInUser = await app.logIn(credentials);
+        await AsyncStorage.setItem('userID', loggedInUser.id);
+        await AsyncStorage.setItem('email', email);
+        await AsyncStorage.setItem('password', password);
+        openRealm();
+        return (
+          "successful login"
+        );
+      } catch (e) {
+        return (
+          e
+        );
+      }
+      
+
+      console.log(loggedInUser);
+
+
 
       //set the redux userID variable
-      dispatch(setUserId(loggedInUser.id));
-    })();
-    }, []);
+      //dispatch(setUserId(loggedInUser.id));
+}
+
+export const registerUser = async (email, password) => {
+    try {
+      const registeredUser = await app.emailPasswordAuth.registerUser({ email, password });
+      const credentials = Realm.Credentials.emailPassword(
+        email,
+        password
+      );
+      const login = await app.logIn(credentials);
+      await AsyncStorage.setItem('userID', login.id);
+      await AsyncStorage.setItem('email', email);
+      await AsyncStorage.setItem('password', password);
+      return (
+        "successful register"
+      );
+
+    } catch (e) {
+      return (
+        e
+      );
+    }
+    
+
+    
 }
 
 //function to write a geopic to mongo
@@ -38,6 +84,23 @@ export const geopicUpload = async (queryString) => {
   //upload using the passes queryString object
   const upload = await geopics.insertOne(queryString);
   console.log(upload);
+}
+
+export const openRealm = async () => {
+    const partition = app.currentUser.id;
+    const config = {
+      schema: [userSchema],
+      sync: {
+        user: app.currentUser,
+        partitionValue: partition
+      }
+    }
+    try {
+      const realm = await Realm.open(config);
+      realm.close();
+    } catch (err) {
+      console.error("failed to open realm", err.message);
+    }
 }
 
 /*
