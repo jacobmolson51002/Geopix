@@ -97,6 +97,18 @@ export const openRealm = async () => {
     }
     try {
       const realm = await Realm.open(config);
+      
+      const userInfo = await realm.objects("info");
+
+
+      /*realm.write(() => {
+          const id = new Realm.BSON.ObjectID();
+          newUser = realm.create("info", {_id: id, _partition: partition, email: "test", password: "test", geocash: 40, profilePic: 'link', userID: 'id', username: 'jacobmolson'})
+      });*/
+      
+      console.log(userInfo);
+
+
       realm.close();
     } catch (err) {
       console.error("failed to open realm", err.message);

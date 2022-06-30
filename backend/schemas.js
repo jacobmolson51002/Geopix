@@ -1,3 +1,5 @@
+import { Realm } from '@realm/react';
+
 export const userSchema = {
     name: "info",
     properties: {
