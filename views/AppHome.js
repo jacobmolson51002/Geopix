@@ -6,10 +6,17 @@ import { View, Text, Button } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useState } from 'react';   
+import AsyncStorage from '@react-native-async-storage/async-storage';
         
 export const AppHome = ({ navigation }) => { 
 
     const Stack = createNativeStackNavigator();
+
+    const logout = async () => {
+        await AsyncStorage.removeItem('email');
+        await AsyncStorage.removeItem('userID');
+        await AsyncStorage.removeItem('password');
+    }
 
     return (
         <View style={{ flex: 1 }}>
@@ -20,7 +27,7 @@ export const AppHome = ({ navigation }) => {
                 </Stack.Navigator>
             </NavigationContainer>
             <View style={styles.nav}>
-                <Text>This is working</Text>
+                <Button title="Logout" onPress={() => {logout(); navigation.navigate("Login");}} />
             </View>
         </View>
 

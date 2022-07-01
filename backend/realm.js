@@ -30,7 +30,6 @@ export const logUserIn = async (email, password) => {
         await AsyncStorage.setItem('userID', loggedInUser.id);
         await AsyncStorage.setItem('email', email);
         await AsyncStorage.setItem('password', password);
-        openRealm();
         return (
           "successful login"
         );
@@ -52,14 +51,7 @@ export const logUserIn = async (email, password) => {
 export const registerUser = async (email, password) => {
     try {
       const registeredUser = await app.emailPasswordAuth.registerUser({ email, password });
-      const credentials = Realm.Credentials.emailPassword(
-        email,
-        password
-      );
-      const login = await app.logIn(credentials);
-      await AsyncStorage.setItem('userID', login.id);
-      await AsyncStorage.setItem('email', email);
-      await AsyncStorage.setItem('password', password);
+      logUserIn(email, password);
       return (
         "successful register"
       );

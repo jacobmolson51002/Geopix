@@ -1,23 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, Button, TextInput } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { setUserId } from '../redux/actions';
-import { logUserIn, registerUser } from '../backend/realm';
+import { logUserIn, registerUser, openRealm } from '../backend/realm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SplashScreen from 'expo-splash-screen';
 
 
 export const Login = ({ navigation }) => {
+    //const [appIsReady, setAppIsReady] = useState(false);
+    //const [userLoggedIn, setUserLoggedIn] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loginScreenShowing, setLoginScreenShowing] = useState(true);
+    const [createAccountShowing, setCreateAccountShowing] = useState(false);
 
     const loginHandler = async () => {
 
         const login = await logUserIn(email, password);
         if(login === "successful login") {
+            //openRealm();
             console.log("success");
-            //go to home page
+            navigation.navigate("Home");
         } else {
             console.log(login.message);
         }
@@ -31,6 +36,7 @@ export const Login = ({ navigation }) => {
             const register = await registerUser(email, password);
             if(register === "successful register") {
                 console.log("success");
+                setCreateAccountShowing(true);
                 //go to home page
             } else {
                 console.log(register.message);
@@ -42,6 +48,40 @@ export const Login = ({ navigation }) => {
 
         //navigation.navigate("Map");
     }
+  
+  
+    /*const prepare = async () => {
+        try {
+          await SplashScreen.preventAutoHideAsync();
+  
+          /*const loginCredentials = null;
+          await AsyncStorage.removeItem('email');
+          await AsyncStorage.removeItem('userID');
+          await AsyncStorage.removeItem('password');
+  
+          const loginCredentials = await AsyncStorage.getItem('userID');
+  
+  
+          if(loginCredentials !== null){
+            navigation.navigate("Home");
+          }else{
+            console.log("user not found");
+          }
+        } catch(e) {
+          console.warn(e);
+        } finally {
+          setAppIsReady(true);
+        }
+      };
+  
+    const onLayoutRootView = useCallback(async () => {
+      await prepare();
+      console.log(appIsReady);
+      if(appIsReady){
+        console.log("splash screen ready");
+        await SplashScreen.hideAsync();
+      }
+    }, [appIsReady]);*/
 
     return(
         <View style={{ flex: 1 }}>
@@ -56,6 +96,13 @@ export const Login = ({ navigation }) => {
                         <TextInput defaultValue={email} onChangeText={newText => setEmail(newText)} placeholder="email" style={{ borderWidth: 2, width: 200, marginTop: 50, height: 25 }}/>
                         <TextInput defaultValue={password} onChangeText={newText => setPassword(newText)} secureTextEntry={true} placeholder="password" style={{ borderWidth: 2, width: 200, marginTop: 50, height: 25 }}/>
                         <Button title="Login" onPress={loginHandler} />
+                    </View>
+                 ) : createAccountShowing ? (
+                    <View>
+                        <TextInput defaultValue={email} onChangeText={newText => setEmail(newText)} placeholder="email" style={{ borderWidth: 2, width: 200, marginTop: 33, height: 25 }}/>
+                        <TextInput defaultValue={password} onChangeText={newText => setPassword(newText)} secureTextEntry={true} placeholder="password" style={{ borderWidth: 2, width: 200, marginTop: 33, height: 25 }}/>
+                        <TextInput defaultValue={confirmPassword} onChangeText={newText => setConfirmPassword(newText)} secureTextEntry={true} placeholder="confirm password" style={{ borderWidth: 2, width: 200, marginTop: 33, height: 25 }}/>
+                        <Button title="Create Account" onPress={registerHandler} />
                     </View>
                  ) : (
                     <View>
