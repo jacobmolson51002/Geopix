@@ -1,16 +1,19 @@
 import React from 'react';
 import { Login } from './Login';
 import { Map } from './Map';
-import { CameraView } from './CameraView';
+import { Feed } from './Feed';
+import { Profile } from './Profile';
+import { Inbox } from './Inbox';
 import { View, Text, Button } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useState } from 'react';   
 import AsyncStorage from '@react-native-async-storage/async-storage';
         
 export const AppHome = ({ navigation }) => { 
 
-    const Stack = createNativeStackNavigator();
+    const Tab = createBottomTabNavigator();
 
     const logout = async () => {
         await AsyncStorage.removeItem('email');
@@ -19,18 +22,12 @@ export const AppHome = ({ navigation }) => {
     }
 
     return (
-        <View style={{ flex: 1 }}>
-            <NavigationContainer independent={true}>
-                <Stack.Navigator screenOptions={{ headerShown: false }} mode="modal">
-                    <Stack.Screen name="Map" component={Map} />
-                    <Stack.Screen name="Camera" component={CameraView} />
-                </Stack.Navigator>
-            </NavigationContainer>
-            <View style={styles.nav}>
-                <Button title="Logout" onPress={() => {logout(); navigation.navigate("Login");}} />
-            </View>
-        </View>
-
+        <Tab.Navigator initialRouteName="Map" screenOptions={{ headerShown: false }}>
+            <Tab.Screen name="Feed" component={Feed} />
+            <Tab.Screen name="Map" component={Map} />
+            <Tab.Screen name="Inbox" component={Inbox} />
+            <Tab.Screen name="Profile" component={Profile} />
+        </Tab.Navigator>
     )
 }
 

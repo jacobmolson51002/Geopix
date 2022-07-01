@@ -9,6 +9,7 @@ import moment from 'moment';
 import { Provider } from 'react-redux';
 import { Store } from '../redux/store';
 import { useSelector } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 //firebase configuration object
 const firebaseConfig = {
@@ -24,12 +25,11 @@ const firebaseConfig = {
 
 export const CameraView = ({ navigation }) => {
     //call login user and setLocation hooks to set the redux variables
-    loginUser();
     setLocation();
 
     //initialize hooks
     const location = useSelector(state => state.userReducer);
-    const user = useSelector(state => state.userReducer);
+    //const user = useSelector(state => state.userReducer);
     const [hasPermission, setHasPermission] = useState(null);
     const [type, setType] = useState(CameraType.back);
     const [previewVisible, setPreviewVisible] = useState(false);
@@ -53,6 +53,8 @@ export const CameraView = ({ navigation }) => {
       //initialize firebase and firebase storage
       const app = initializeApp(firebaseConfig);
       const storage = getStorage(app);
+      const userID = await AsyncStorage.getItem('userID');
+      
       
   
       //create new blob to upload pic
@@ -75,7 +77,7 @@ export const CameraView = ({ navigation }) => {
       });
       
       //create the storage url for firebase storage
-      const storageUrl = user.userID + '/' + currentTime;
+      const storageUrl = userID + '/' + currentTime;
 
       //define the storage reference
       const storageRef = ref(storage, storageUrl);
@@ -90,11 +92,12 @@ export const CameraView = ({ navigation }) => {
 
       console.log(currentTime);
 
+
       //create the geopic object to store in the database
       const geopic = {
         'pic': storageUrl,
         'caption': 'test caption',
-        'userID': user.userID,
+        'userID': userID,
         'username': 'jacobmolson',
         'votes': [0,0,0],
         'flags': [],
