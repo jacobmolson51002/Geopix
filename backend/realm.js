@@ -9,6 +9,7 @@ import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as Location from 'expo-location';
 import { setCurrentLocation } from '../redux/actions';
+import * as firebase from './firebaseConfig';
 
 //initialize realm app
 const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
@@ -198,40 +199,6 @@ export const geopicUpload = async (picUrl, location) => {
       geopicUploadMongo(geopic);
       
       //call mongo to upload to the databse
-}
-
-export const getImage = async (geopic) => {
-  const storage = getStorage();
-  const geopicRef = ref(storage, geopic.pic);
-  getDownloadURL(geopicRef)
-  .then((url) => {
-    console.log(url);
-    return(url);
-  })
-  .catch((error) => {
-    // A full list of error codes is available at
-    // https://firebase.google.com/docs/storage/web/handle-errors
-    switch (error.code) {
-      case 'storage/object-not-found':
-        console.log('doesnt exist');
-        break;
-      case 'storage/unauthorized':
-        // User doesn't have permission to access the object
-        console.log('no permissions');
-        break;
-      case 'storage/canceled':
-        // User canceled the upload
-        console.log('canceled upload');
-        break;
-
-      // ...
-
-      case 'storage/unknown':
-        // Unknown error occurred, inspect the server response
-        break;
-    }
-  });
-
 }
 
 export const openRealm = async () => {

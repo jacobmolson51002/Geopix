@@ -29,13 +29,14 @@ export const Map = ({ navigation }) => {
     const location = useSelector(state => state.userReducer);
     const geopics = useSelector(state => state.geopicsReducer);
 
+
     const getGeopicDataReady = async (geopic) => {
       const url = await getImage(geopic);
       console.log(url);
       geopic.pic = url;
       setGeopicData(geopic);
-      setGeopicDataReady(true);
     }
+
     
 
     console.log(geopicData);
@@ -65,11 +66,7 @@ export const Map = ({ navigation }) => {
           }>
               {geopics.geopics.map((geopic, index) => {
                 //console.log(geopic.location.coordinates[0]);
-                return <Marker onPress={() => {
-                  setMapShowing(false); 
-                  getGeopicDataReady(geopic, setGeopicData, setGeopicDataReady, geopicData);
-
-                }} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} title="You" description={geopic.timestamp} />
+                return <Marker onPress={() => {setMapShowing(false); setGeopicData(geopic);}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} title="You" description={geopic.timestamp} />
               })}
               <StatusBar />
           </MapView>
@@ -77,7 +74,7 @@ export const Map = ({ navigation }) => {
               <Text>hello there</Text>
           </TouchableOpacity>
       </View>
-  ) : !mapShowing && geopicDataReady ? (
+  ) : !mapShowing ? (
     <SingleFeedView geopic={geopicData} style={{ flex: 1 }}/>
   ) : (
     <AppLoading />
