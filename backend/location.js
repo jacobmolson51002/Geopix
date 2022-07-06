@@ -1,11 +1,10 @@
 import * as Location from 'expo-location';
 import { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentLocation } from '../redux/actions';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const setLocation = () => {
-    /*const [location, setLocation] = useState({coords: {latitude: 0, longitude: 0}});
-    const [errorMsg, setErrorMsg] = useState(null);*/
+export const setLocation = async () => {
     const dispatch = useDispatch(); 
     useEffect(() => {
     (async () => {
@@ -19,7 +18,7 @@ export const setLocation = () => {
         //setLocation(location);
         //locationSet = true;
         dispatch(setCurrentLocation(location.coords));
-        console.log(location);
+        return(location.coords);
     })();
     }, []);
 }

@@ -10,16 +10,15 @@ import { Login } from './views/Login';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+
 export const AppContainer = () => {
 
     const Stack = createNativeStackNavigator();
     return (
-        <NavigationContainer independent={true}>
-            <Stack.Navigator screenOptions={{ headerShown: false }} initialRoute="AppHome" >
-                <Stack.Screen name="AppHome" component={AppHome} />
-                <Stack.Screen name="Camera" component={CameraView} />
-            </Stack.Navigator>
-        </NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRoute="AppHome" >
+            <Stack.Screen name="AppHome" component={AppHome} />
+            <Stack.Screen name="Camera" component={CameraView} />
+        </Stack.Navigator>
     )
 }
 

@@ -19,6 +19,7 @@ import AppLoading from 'expo-app-loading';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+
 const App = () => {
 
   const [initialRoute, setInitialRoute] = useState(null);

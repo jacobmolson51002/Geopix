@@ -1,12 +1,31 @@
 import { Realm } from '@realm/react';
 import { userSchema } from './schemas';
-import { useDispatch } from 'react-redux';
-import { setUserId } from '../redux/actions';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUserId, setGeopics } from '../redux/actions';
 import { useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setLocation } from './location';
+import { initializeApp } from "firebase/app";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import * as Location from 'expo-location';
+import { setCurrentLocation } from '../redux/actions';
 
 //initialize realm app
 const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
+
+//initialize firebase app
+//firebase configuration object
+const firebaseConfig = {
+  apiKey: "AIzaSyBDlW6U80c2hw-dR5Qz1v0fHejHE-V32zY",
+  authDomain: "geopix-295e8.firebaseapp.com",
+  projectId: "geopix-295e8",
+  storageBucket: "geopix-295e8.appspot.com",
+  messagingSenderId: "321768973307",
+  appId: "1:321768973307:web:221f750a1b5418160c215e",
+  measurementId: "G-5RNV8GVDJQ"
+};
+const firebaseApp = initializeApp(firebaseConfig);
+const storage = getStorage(firebaseApp);
 
 /*const credentials = Realm.Credentials.emailPassword(
   "jacobmolson51002@gmail.com",
@@ -48,6 +67,12 @@ export const logUserIn = async (email, password) => {
       //dispatch(setUserId(loggedInUser.id));
 }
 
+export const logUserOut = async () => {
+    await AsyncStorage.removeItem('email');
+    await AsyncStorage.removeItem('userID');
+    await AsyncStorage.removeItem('password');
+}
+
 export const registerUser = async (email, password) => {
     try {
       const registeredUser = await app.emailPasswordAuth.registerUser({ email, password });
@@ -66,8 +91,34 @@ export const registerUser = async (email, password) => {
     
 }
 
+export const getGeopics = async () => {
+    const dispatch = useDispatch();
+    useEffect(() => {
+      (async () => {
+          let { status } = await Location.requestForegroundPermissionsAsync();
+          if (status !== 'granted') {
+              console.log("error")
+          return;
+          }
+  
+          let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low, distanceInterval: 0, timeInterval: 500 });
+          //setLocation(location);
+          //locationSet = true;
+          dispatch(setCurrentLocation(location.coords));
+          console.log(location);
+
+          const mongodb = app.currentUser.mongoClient('mongodb-atlas');
+          const geopics = mongodb.db('geopics').collection('public');
+          const nearbyGeopics = await geopics.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
+          dispatch(setGeopics(nearbyGeopics));
+          
+      })();
+      }, []);
+
+}
+
 //function to write a geopic to mongo
-export const geopicUpload = async (queryString) => {
+export const geopicUploadMongo = async (queryString) => {
 
   //connect to databse with credentials
   const mongodb = app.currentUser.mongoClient('mongodb-atlas');
@@ -75,7 +126,112 @@ export const geopicUpload = async (queryString) => {
   const geopics = mongodb.db('geopics').collection('public');
   //upload using the passes queryString object
   const upload = await geopics.insertOne(queryString);
-  console.log(upload);
+  //dispatch(setGeopics(upload));
+  //console.log(upload);
+}
+
+export const geopicUpload = async (picUrl, location) => {
+
+      //get current time
+      let currentTime = new Date();
+
+      //initialize firebase and firebase storage
+      const userID = await AsyncStorage.getItem('userID');
+      
+      
+  
+      //create new blob to upload pic
+      const blob = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+    
+        // on load
+        xhr.onload = function () {
+          resolve(xhr.response);
+      };
+          // on error
+          xhr.onerror = function (e) {
+          console.log(e);
+          reject(new TypeError("Network request failed"));
+      };
+          // on complete
+          xhr.responseType = "blob";
+          xhr.open("GET", picUrl, true);
+          xhr.send(null);
+      });
+      
+      //create the storage url for firebase storage
+      const storageUrl = userID + '/' + currentTime;
+
+      //define the storage reference
+      const storageRef = ref(storage, storageUrl);
+  
+      //upload the pic to firebase storage
+      const result = await uploadBytes(storageRef, blob).then((snapshot) => {
+        console.log('succesfully uploaded pic');
+      });
+
+      //close the blob
+      await blob.close();
+
+      console.log(currentTime);
+
+
+      //create the geopic object to store in the database
+      const geopic = {
+        'pic': storageUrl,
+        'caption': 'test caption',
+        'userID': userID,
+        'username': 'jacobmolson',
+        'votes': [0,0,0],
+        'flags': [],
+        'hidden': false,
+        'comments': 0,
+        'location': {
+          'type': 'Point',
+          'coordinates': [location.currentLocation.longitude, location.currentLocation.latitude]
+        },
+        'timestamp': `${currentTime}`,
+        'views': 0,
+        '_partition': 'geopics'
+      }
+
+      geopicUploadMongo(geopic);
+      
+      //call mongo to upload to the databse
+}
+
+export const getImage = async (geopic) => {
+  const storage = getStorage();
+  const geopicRef = ref(storage, geopic.pic);
+  getDownloadURL(geopicRef)
+  .then((url) => {
+    console.log(url);
+    return(url);
+  })
+  .catch((error) => {
+    // A full list of error codes is available at
+    // https://firebase.google.com/docs/storage/web/handle-errors
+    switch (error.code) {
+      case 'storage/object-not-found':
+        console.log('doesnt exist');
+        break;
+      case 'storage/unauthorized':
+        // User doesn't have permission to access the object
+        console.log('no permissions');
+        break;
+      case 'storage/canceled':
+        // User canceled the upload
+        console.log('canceled upload');
+        break;
+
+      // ...
+
+      case 'storage/unknown':
+        // Unknown error occurred, inspect the server response
+        break;
+    }
+  });
+
 }
 
 export const openRealm = async () => {
