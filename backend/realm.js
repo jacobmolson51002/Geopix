@@ -1,7 +1,7 @@
 import { Realm } from '@realm/react';
 import { userSchema } from './schemas';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUserId, setGeopics } from '../redux/actions';
+import { setUserId, setGeopics, addGeopic } from '../redux/actions';
 import { useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setLocation } from './location';
@@ -124,8 +124,7 @@ export const getGeopics = async () => {
 }
 
 //function to write a geopic to mongo
-export const geopicUploadMongo = async (queryString) => {
-
+export const geopicUploadMongo = async (queryString, dispatch, url) => {
   //connect to databse with credentials
   const mongodb = app.currentUser.mongoClient('mongodb-atlas');
   //access the geopics collection
@@ -133,10 +132,13 @@ export const geopicUploadMongo = async (queryString) => {
   //upload using the passes queryString object
   const upload = await geopics.insertOne(queryString);
   //dispatch(setGeopics(upload));
+  const addGeopicString = queryString;
+  addGeopicString.url = url;
+  dispatch(addGeopic(addGeopicString));
   //console.log(upload);
 }
 
-export const geopicUpload = async (geopicInfo, location) => {
+export const geopicUpload = async (geopicInfo, location, dispatch) => {
 
       //get current time
       let currentTime = new Date();
@@ -203,7 +205,7 @@ export const geopicUpload = async (geopicInfo, location) => {
         '_partition': 'geopics'
       }
 
-      geopicUploadMongo(geopic);
+      geopicUploadMongo(geopic, dispatch, geopicInfo.url);
       
       //call mongo to upload to the databse
 }

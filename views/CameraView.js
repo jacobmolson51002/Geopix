@@ -4,7 +4,7 @@ import { Camera, CameraType } from 'expo-camera';
 import { geopicUpload, loginUser } from '../backend/realm';
 import { setLocation } from '../backend/location';
 import moment from 'moment';
-import { Provider } from 'react-redux';
+import { Provider, useDispatch } from 'react-redux';
 import { Store } from '../redux/store';
 import { useSelector } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -30,16 +30,10 @@ const styles = StyleSheet.create({
     color: 'white'
   },
   captureButtonContainer: {
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    display: 'flex', 
-    position: 'absolute', 
-    bottom: 30, 
     borderRadius: 50, 
     width: 100, 
     height: 100, 
     backgroundColor: 'fff',
-    left: '40%',
     borderWidth: 6,
     borderColor: 'white'
   },
@@ -70,7 +64,8 @@ const styles = StyleSheet.create({
     padding: 15,
     fontSize: 20,
     color: 'white',
-    marginTop: 100
+    marginTop: 100,
+    marginBottom: 50
   },
   optionsPreviewImage: {
     width: 'auto',
@@ -115,7 +110,7 @@ const TakePicture = ({ navigation }) => {
               flex: 1
             }}
           >
-          <TouchableOpacity onPress={() => {navigation.navigate("options", { url: picUrl })}} style={styles.uploadButtonContainer}>
+          <TouchableOpacity onPress={() => {navigation.navigate("reviewAndUpload", { url: picUrl })}} style={styles.uploadButtonContainer}>
             <Text style={styles.uploadButton}>-></Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => {setPreviewVisible(false);}} style={styles.retakeButtonContainer}>
@@ -158,11 +153,12 @@ const TakePicture = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.navigate('Map')} style={styles.backButtonContainer}>
           <Text style={styles.backButton} ><Ionicons name="chevron-back" size={24} color="white" /></Text>
         </TouchableOpacity>
+        <View style={{ position: 'absolute', bottom: 30, width: '100%', display: 'flex', alignItems: 'center', justiftyContent: 'center' }}>
         <TouchableOpacity 
                 style={styles.captureButtonContainer}
                 onPress={takePicture} >
         </TouchableOpacity>
-
+        </View>
         </View>
         )}
       </View>
@@ -174,79 +170,65 @@ const Options = ({ route, navigation }) => {
   const { url } = route.params;
   console.log(url);
   return(
-      <KeyboardAvoidingView style={{ flex: 1, width: '100%', height: '100%', backgroundColor: 'black'}} >
+    
+      <KeyboardAvoidingView style={{ flex: 1, width: '100%', height: '100%', backgroundColor: 'black'}} 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, padding: 24, justifyContent: 'space-around' }} >
           <Image style={styles.optionsPreviewImage} source={{uri: url}} />
           <TextInput defaultValue={caption} onChangeText={newText => setCaption(newText)} placeholder="caption" style={styles.captionBox}/>
-          </View>
+        </View>
         </TouchableWithoutFeedback>
         <TouchableOpacity onPress={() => {navigation.navigate("reviewAndUpload", { url: url, caption: caption })}} style={styles.uploadButtonContainer}>
           <Text style={styles.uploadButton}>-></Text>
         </TouchableOpacity>
       </KeyboardAvoidingView>
+      
     
   )
 }
 
 const ReviewAndUpload = ({ route, navigation }) => {
   const location = useSelector(state => state.userReducer);
+  const dispatch = useDispatch();
+  const [caption, setCaption] = useState("");
+  
   //upload the pic to firebase storage and mongodb
+  const { url } = route.params;
+
   const uploadGeopic = async () => {
-    geopicUpload({url: url, caption: caption}, location);
+    geopicUpload({url: url, caption: caption}, location, dispatch);
+    navigation.navigate('AppHome');
   }
-  const { url, caption } = route.params;
+
+  const backButton = "<-";
   return (
-    <View style={{ flex: 1 }} >
-      <Image style={{ width: '100%', height: '80%' }} source={{uri: url}} />
-      <View style={{ width: '100%', height: '10%', backgroundColor: 'gray', padding: 15 }} >
-        <Text style={{ fontSize: 20, color: 'white' }}>{caption}</Text>
-      </View> 
-      <View style={{ width: '100%', height: '10%', backgroundColor: 'black' }} >
-        <Button title="upload" onPress={uploadGeopic} style={{ margin: 20, color: 'turquoise' }} />
-      </View>
-    </View>
+    <KeyboardAvoidingView style={{ flex: 1, width: '100%', height: '100%', backgroundColor: 'black'}} 
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+  >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={{ flex: 1 }} >
+          <Image style={{ width: '100%', height: '77%' }} source={{uri: url}} />
+          <View style={{ width: '100%', height: '13%', backgroundColor: 'black', padding: 15 }} >
+            <TextInput defaultValue={caption} onChangeText={newText => setCaption(newText)} placeholder="Enter caption..." placeholderTextColor='white' style={{ color:'white', fontSize: 15 }}/>
+          </View> 
+          <View style={{ width: '100%', height: '10%', backgroundColor: 'black' }} >
+            <Button title="upload" onPress={uploadGeopic} style={{ margin: 20, color: 'turquoise' }} />
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
+          <TouchableOpacity onPress={() => {navigation.navigate("takePicture")}} style={styles.retakeButtonContainer}>
+            <Text style={styles.retakeButton}>{backButton}</Text>
+          </TouchableOpacity>
+      </KeyboardAvoidingView>
   )
 }
 
 
 export const CameraView = ({ navigation }) => {
-    //call login user and setLocation hooks to set the redux variables
-    //setLocation();
     const Stack = createNativeStackNavigator();
 
-    //initialize hooks
-    
-    //const user = useSelector(state => state.userReducer);
-
-    const [editVisible, setEditVisible] = useState(false);
-    
-    
-    const backButton = '<';
-
-
-
-    const EditView = () => {
-      const backButton = "<-";
-      return (
-        <View style={{ flex: 1 }}>
-          <Image source={{ uri: picUrl }} style={{ width: '100%', height: '100%',flex: 1, position: 'absolute' }} />
-          <TouchableOpacity onPress={() => {setEditVisible(false); setPreviewVisible(true)}} style={styles.retakeButtonContainer}>
-            <Text style={styles.retakeButton}>{backButton}</Text>
-          </TouchableOpacity>
-          <ScrollView style={{ flex: 1, width: '100%', height: '100%', position: 'absolute' }}>
-            <View style={{ width: '100%', height: '85%' }} ><Text>something</Text></View>
-            <TextInput style={{ width: '100%', height: '15%', backgroundColor: 'blue' }} />
-          </ScrollView>
-
-        </View>
-        
-        
-      )
-    }
-  
-
-    //show the camera screen
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="takePicture" >
         <Stack.Screen name="takePicture" component={TakePicture} />

@@ -18,10 +18,10 @@ import CachedImage from 'react-native-expo-cached-image';
 }*/
 
 
-export const SingleFeedView = (props) => {
+export const SingleFeedView = ({ route, navigation }) => {
     //const [geopicData, setGeopicData] = useState(null);
 
-    console.log(props.geopic.pic);
+    const { geopic } = route.params;
 
     //setGeopicData(true);
 
@@ -62,15 +62,23 @@ export const SingleFeedView = (props) => {
             flex: 1
         },
         image: {
-            width: '100%',
-            height: '90%',
-            borderWidth: 0
+            width: '101%',
+            height: '87%',
+            borderLeftWidth: 0,
+            marginLeft: -1,
+            marginRight: -1
         },
-        captionBox: {
+        bottomBox: {
             width: '100%',
-            height: '10%',
+            height: '13%',
             padding: 15,
             backgroundColor: 'black'
+        },
+        captionBox: {
+            height: '100%',
+            display: 'flex',
+            flexWrap: 'wrap',
+            width: '60%'
         },
         captionText: {
             fontSize: 15,
@@ -87,17 +95,18 @@ export const SingleFeedView = (props) => {
         },
     }
     const backButton = '<-';
-    return 1 === 1 ? (
+    return (
         <View style={styles.container}>
-            <CachedImage source={{ uri: props.geopic.pic }} style={styles.image}/>
-            <View style={styles.captionBox} >
-                <Text style={styles.captionText}>{props.geopic.caption}</Text>
+            <CachedImage source={{ uri: geopic.pic }} style={styles.image}/>
+            <View style={styles.bottomBox} >
+                <View style={styles.captionBox}>
+                    <Text style={{ fontWeight: 'bold', color: 'white', paddingBottom: 5}}>{geopic.username}:</Text>
+                    <Text style={styles.captionText}>{geopic.caption}</Text>
+                </View>
             </View>
-            <TouchableOpacity onPress={() => {props.backToMap(true)}} style={styles.retakeButtonContainer}>
+            <TouchableOpacity onPress={() => {navigation.navigate('displayMap')}} style={styles.retakeButtonContainer}>
                 <Text style={styles.retakeButton}>{backButton}</Text>
             </TouchableOpacity>
         </View>
-    ) : (
-        <AppLoading />
     )
 }

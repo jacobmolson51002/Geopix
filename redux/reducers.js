@@ -1,4 +1,4 @@
-import { CURRENT_LOCATION, USER_ID, GEOPICS } from './actions';
+import { CURRENT_LOCATION, USER_ID, GEOPICS, ADD_GEOPIC } from './actions';
 
 const initializeUserState = {
     userID: 'this is something',
@@ -29,6 +29,8 @@ export function geopicsReducer(state = initilizeGeopicsState, action){
     switch(action.type){
         case GEOPICS:
             return{...state, geopics: action.payload};
+        case ADD_GEOPIC:
+            return{...state, geopics: [...state.geopics, action.payload]}
         default: 
             return state;
     }

@@ -17,9 +17,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SingleFeedView, getGeopicDataReady } from './FeedView';
 import CachedImage from 'react-native-expo-cached-image';
 
-export const Map = ({ navigation }) => {
-    const [mapShowing, setMapShowing] = useState(true);
-    const [geopicData, setGeopicData] = useState(null);
+const DisplayMap = ({ navigation }) => {
+    //const [mapShowing, setMapShowing] = useState(true);
+    //const [geopicData, setGeopicData] = useState(null);
     const [geopicDataReady, setGeopicDataReady] = useState(false);
   //queryMongo();
     //setLocation();
@@ -29,10 +29,6 @@ export const Map = ({ navigation }) => {
     
     const location = useSelector(state => state.userReducer);
     const geopics = useSelector(state => state.geopicsReducer);
-
-    
-
-    console.log(geopicData);
     
 
     console.log(geopics.geopics);
@@ -56,15 +52,15 @@ export const Map = ({ navigation }) => {
 
     console.log("refreshed");
 
-    return geopics.geopics != null && mapShowing ? (
-      <View style={{ flex: 1 }}>
+    return geopics.geopics != null ? (
+      <View style={{ flex: 1, overflow: 'hidden', backgroundColor: 'black' }}>
         {/*<NavigationContainer independent={true}>
           <Stack.Navigator screenOptions={{headerShown: false}} initialRoute="Map">
             <Stack.Screen title="Map" component={MapDisplay} />
             <Stack.Screen title="Camera" component={CameraView} />
           </Stack.Navigator>
         </NavigationContainer>*/}
-        <MapView style={{ flex: 1 }} region={
+        <MapView style={{ flex: 1, borderWidth: 1, borderColor: 'black', borderRadius: 15 }} region={
             {
               latitude: location.currentLocation.latitude,
               longitude: location.currentLocation.longitude,
@@ -74,17 +70,26 @@ export const Map = ({ navigation }) => {
           }>
               {geopics.geopics.map((geopic, index) => {
                 //console.log(geopic.location.coordinates[0]);
-                return <Marker onPress={() => {setMapShowing(false); setGeopicData(geopic);}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} title="You" description={geopic.timestamp} />
+                return <Marker onPress={() => {navigation.navigate('singleView', { geopic: geopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} />
               })}
               <StatusBar />
           </MapView>
-          <TouchableOpacity style={{ position: 'absolute',flex: 1, shadowOffset: {width: 0, height: 2}, shadowColor: 'black', shadowOpacity: 0.5, shadowRadius: 2, top: '92%', left: '85%', width: 50, height: 50, backgroundColor: 'turquoise', borderRadius: 10 }} onPress={() => {navigation.navigate("Camera")}} >
-              <Text>hello there</Text>
+          <TouchableOpacity style={{ padding: 0, justiftyContent: 'center', display: 'flex', alignItems: 'center', position: 'absolute',flex: 1, shadowOffset: {width: 0, height: 2}, shadowColor: 'black', shadowOpacity: 0.5, shadowRadius: 2, top: '92%', left: '85%', width: 50, height: 50, backgroundColor: 'turquoise', borderRadius: 10 }} onPress={() => {navigation.navigate("Camera")}} >
+              <Text style={{ fontSize: 50, color:  'white', marginTop: -5 }}>+</Text>
           </TouchableOpacity>
       </View>
-  ) : !mapShowing ? (
-    <SingleFeedView backToMap={setMapShowing} geopic={geopicData} style={{ flex: 1 }}/>
   ) : (
     <AppLoading />
   )
-};
+}
+
+
+export const Map = () => {
+  const Stack = createNativeStackNavigator();
+  return (
+    <Stack.Navigator screenOptions={{ animation: 'none', headerShown: false }} initialRouteName="displayMap" >
+      <Stack.Screen name="displayMap" component={DisplayMap} />
+      <Stack.Screen name="singleView" component={SingleFeedView} />
+    </Stack.Navigator> 
+  )
+}
