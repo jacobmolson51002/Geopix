@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, TouchableHighlight, Button } from 'react-native';
+import { View, Text, TouchableOpacity, TouchableHighlight, Button, Image } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { queryMongo, getGeopics, getImage } from '../backend/realm';
@@ -15,6 +15,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import _ from 'underscore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SingleFeedView, getGeopicDataReady } from './FeedView';
+import CachedImage from 'react-native-expo-cached-image';
 
 export const Map = ({ navigation }) => {
     const [mapShowing, setMapShowing] = useState(true);
@@ -29,14 +30,6 @@ export const Map = ({ navigation }) => {
     const location = useSelector(state => state.userReducer);
     const geopics = useSelector(state => state.geopicsReducer);
 
-
-    const getGeopicDataReady = async (geopic) => {
-      const url = await getImage(geopic);
-      console.log(url);
-      geopic.pic = url;
-      setGeopicData(geopic);
-    }
-
     
 
     console.log(geopicData);
@@ -45,6 +38,21 @@ export const Map = ({ navigation }) => {
     console.log(geopics.geopics);
 
     //console.log(location.currentLocation.latitude);
+
+    useEffect(() => {
+      (async () => {
+        if(geopics.geopics != null){
+          console.log("caching!");
+          geopics.geopics.map((geopic, index) => {
+            console.log(`caching ${geopic.pic}`);
+            return(
+            <CachedImage source={{ uri: geopic.pic }} />
+            )
+          })
+        }
+      })();
+
+    }, [geopics])
 
     console.log("refreshed");
 

@@ -5,7 +5,7 @@ import AppLoading from 'expo-app-loading';
 import * as firebase from '../backend/firebaseConfig';
 import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-
+import CachedImage from 'react-native-expo-cached-image';
 
 /*export const DisplayImage = (imageUrl) => {
     console.log(imageUrl);
@@ -19,13 +19,15 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 
 export const SingleFeedView = (props) => {
-    const [geopicData, setGeopicData] = useState(null);
+    //const [geopicData, setGeopicData] = useState(null);
 
     console.log(props.geopic.pic);
 
-    const geopicRef = ref(firebase.storage, props.geopic.pic);
+    //setGeopicData(true);
+
+    //const geopicRef = ref(firebase.storage, props.geopic.pic);
     
-    getDownloadURL(geopicRef)
+    /*getDownloadURL(geopicRef)
     .then((url) => {
         const geopic = props.geopic;
         geopic.pic = url;
@@ -53,7 +55,7 @@ export const SingleFeedView = (props) => {
             // Unknown error occurred, inspect the server response
             break;
         }
-    });
+    });*/
 
     const styles = {
         container: {
@@ -61,7 +63,8 @@ export const SingleFeedView = (props) => {
         },
         image: {
             width: '100%',
-            height: '90%'
+            height: '90%',
+            borderWidth: 0
         },
         captionBox: {
             width: '100%',
@@ -84,11 +87,11 @@ export const SingleFeedView = (props) => {
         },
     }
     const backButton = '<-';
-    return geopicData != null ? (
+    return 1 === 1 ? (
         <View style={styles.container}>
-            <Image source={{ uri: geopicData.pic }} style={styles.image}/>
+            <CachedImage source={{ uri: props.geopic.pic }} style={styles.image}/>
             <View style={styles.captionBox} >
-                <Text style={styles.captionText}>{geopicData.caption}</Text>
+                <Text style={styles.captionText}>{props.geopic.caption}</Text>
             </View>
             <TouchableOpacity onPress={() => {props.backToMap(true)}} style={styles.retakeButtonContainer}>
                 <Text style={styles.retakeButton}>{backButton}</Text>

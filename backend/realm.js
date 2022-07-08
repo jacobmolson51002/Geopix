@@ -172,9 +172,11 @@ export const geopicUpload = async (geopicInfo, location) => {
       const storageRef = ref(storage, storageUrl);
   
       //upload the pic to firebase storage
-      const result = await uploadBytes(storageRef, blob).then((snapshot) => {
+      await uploadBytes(storageRef, blob).then((snapshot) => {
         console.log('succesfully uploaded pic');
       });
+
+      const result = await getDownloadURL(storageRef);
 
       //close the blob
       await blob.close();
@@ -184,7 +186,7 @@ export const geopicUpload = async (geopicInfo, location) => {
 
       //create the geopic object to store in the database
       const geopic = {
-        'pic': storageUrl,
+        'pic': result,
         'caption': geopicInfo.caption,
         'userID': userID,
         'username': 'jacobmolson',
