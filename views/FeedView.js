@@ -56,13 +56,43 @@ export const SingleFeedView = (props) => {
     });
 
     const styles = {
-        image: {
+        container: {
             flex: 1
-        }
+        },
+        image: {
+            width: '100%',
+            height: '90%'
+        },
+        captionBox: {
+            width: '100%',
+            height: '10%',
+            padding: 15,
+            backgroundColor: 'black'
+        },
+        captionText: {
+            fontSize: 15,
+            color: 'white'
+        },
+        retakeButton: {
+            color: 'white',
+            fontSize: 25
+        },
+            retakeButtonContainer: {
+            position: 'absolute',
+            top: 70,
+            left: 15
+        },
     }
+    const backButton = '<-';
     return geopicData != null ? (
-        <View style={styles.image}>
-            <Image source={{ uri: geopicData.pic }} style={{ flex: 1 }}/>
+        <View style={styles.container}>
+            <Image source={{ uri: geopicData.pic }} style={styles.image}/>
+            <View style={styles.captionBox} >
+                <Text style={styles.captionText}>{geopicData.caption}</Text>
+            </View>
+            <TouchableOpacity onPress={() => {props.backToMap(true)}} style={styles.retakeButtonContainer}>
+                <Text style={styles.retakeButton}>{backButton}</Text>
+            </TouchableOpacity>
         </View>
     ) : (
         <AppLoading />

@@ -111,6 +111,11 @@ export const getGeopics = async () => {
           const mongodb = app.currentUser.mongoClient('mongodb-atlas');
           const geopics = mongodb.db('geopics').collection('public');
           const nearbyGeopics = await geopics.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
+          /*
+          nearbyGeopics = [
+
+          ]*/
+            
           dispatch(setGeopics(nearbyGeopics));
           
       })();
@@ -131,7 +136,7 @@ export const geopicUploadMongo = async (queryString) => {
   //console.log(upload);
 }
 
-export const geopicUpload = async (picUrl, location) => {
+export const geopicUpload = async (geopicInfo, location) => {
 
       //get current time
       let currentTime = new Date();
@@ -156,7 +161,7 @@ export const geopicUpload = async (picUrl, location) => {
       };
           // on complete
           xhr.responseType = "blob";
-          xhr.open("GET", picUrl, true);
+          xhr.open("GET", geopicInfo.url, true);
           xhr.send(null);
       });
       
@@ -180,7 +185,7 @@ export const geopicUpload = async (picUrl, location) => {
       //create the geopic object to store in the database
       const geopic = {
         'pic': storageUrl,
-        'caption': 'test caption',
+        'caption': geopicInfo.caption,
         'userID': userID,
         'username': 'jacobmolson',
         'votes': [0,0,0],

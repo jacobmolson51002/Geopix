@@ -75,7 +75,7 @@ export const Map = ({ navigation }) => {
           </TouchableOpacity>
       </View>
   ) : !mapShowing ? (
-    <SingleFeedView geopic={geopicData} style={{ flex: 1 }}/>
+    <SingleFeedView backToMap={setMapShowing} geopic={geopicData} style={{ flex: 1 }}/>
   ) : (
     <AppLoading />
   )

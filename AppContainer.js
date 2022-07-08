@@ -15,7 +15,7 @@ export const AppContainer = () => {
 
     const Stack = createNativeStackNavigator();
     return (
-        <Stack.Navigator screenOptions={{ headerShown: false }} initialRoute="AppHome" >
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="AppHome" >
             <Stack.Screen name="AppHome" component={AppHome} />
             <Stack.Screen name="Camera" component={CameraView} />
         </Stack.Navigator>
