@@ -2,6 +2,7 @@ export const USER_ID = 'USER_ID';
 export const CURRENT_LOCATION = 'CURRENT_LOCATION';
 export const CHANGE_NAV_STATE = 'CHANGE_NAV_STATE';
 export const GEOPICS = 'GEOPICS';
+export const SET_CLUSTERS = 'SET_CLUSTERS';
 export const ADD_GEOPIC = 'ADD_GEOPIC';
 
 export const setUserId = userID => dispatch => {
@@ -22,6 +23,13 @@ export const setGeopics = geopics => dispatch => {
     dispatch({
         type: GEOPICS,
         payload: geopics
+    })
+}
+
+export const setClusters = clusters => dispatch => {
+    dispatch({
+        type: SET_CLUSTERS,
+        payload: clusters
     })
 }
 

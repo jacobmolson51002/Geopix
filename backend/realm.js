@@ -1,7 +1,7 @@
 import { Realm } from '@realm/react';
 import { userSchema } from './schemas';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUserId, setGeopics, addGeopic } from '../redux/actions';
+import { setUserId, setGeopics, setClusters, addGeopic } from '../redux/actions';
 import { useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setLocation } from './location';
@@ -108,15 +108,30 @@ export const getGeopics = async () => {
           dispatch(setCurrentLocation(location.coords));
           console.log(location);
 
+
+          
           const mongodb = app.currentUser.mongoClient('mongodb-atlas');
+
+          //query for geopics
           const geopics = mongodb.db('geopics').collection('public');
-          const nearbyGeopics = await geopics.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
+          const nearbyGeopics = await geopics.find({clustered: false, "location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
+          
+          //query for clusters
+          const clusters = mongodb.db('geopics').collection('clusters');
+          const nearbyClusters = await clusters.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
+          nearbyClusters.map(async (cluster, index) => {
+            const geopicsInCluster = await geopics.find({clusterID: cluster._id}).then((data) => {
+              cluster.geopics = data;
+            });
+          })
+          
           /*
           nearbyGeopics = [
 
           ]*/
-            
+          
           dispatch(setGeopics(nearbyGeopics));
+          dispatch(setClusters(nearbyClusters));
           
       })();
       }, []);
@@ -124,17 +139,70 @@ export const getGeopics = async () => {
 }
 
 //function to write a geopic to mongo
-export const geopicUploadMongo = async (queryString, dispatch, url) => {
+export const geopicUploadMongo = async (queryString, dispatch, url, location) => {
   //connect to databse with credentials
   const mongodb = app.currentUser.mongoClient('mongodb-atlas');
   //access the geopics collection
   const geopics = mongodb.db('geopics').collection('public');
+  const clusters = mongodb.db('geopics').collection('clusters');
+
+  const nearbyGeopics = await geopics.find({clustered: false, "location": { $near: { $geometry: { type: "Point", coordinates: [location.currentLocation.longitude, location.currentLocation.latitude] }, $maxDistance: 50}}});
+  const nearbyClusters = await clusters.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.currentLocation.longitude, location.currentLocation.latitude] }, $maxDistance: 50}}});
+  
+  //console.log(nearbyGeopics);
+  //console.log(nearbyClusters);
+
+  if (nearbyGeopics.length >= 1) {
+    if(nearbyClusters.length >= 1){
+      console.log("geopics and clusters nearby");
+
+
+      queryString.clustered = true;
+      queryString.clusterID = nearbyClusters[0]._id;
+
+      const updateClusterNumber = await clusters.updateOne({_id: nearbyClusters[0]._id}, {$set: {numberOfGeopics: nearbyClusters[0].numberOfGeopics+2, mostRecentGeopic: queryString}});
+
+      const updateNearbyGeopic = await geopics.updateOne({_id: nearbyGeopics[0]._id}, {$set: {clustered: true, clusterID: nearbyClusters[0]._id}});
+
+      const uploadClusteredGeopic = await geopics.insertOne(queryString);
+
+    }else{
+
+      console.log("creating new cluster");
+      //creating new cluster
+      //const clusterCoordinate = [(queryString.location.coordinates[0]) + (nearbyGeopics[0].location.coordinates[0]) / 2.0, (queryString.location.coordinates[1]) + (nearbyGeopics[0].location.coordinates[1]) / 2.0];
+
+      const newCluster = await clusters.insertOne({ location: {type: "Point", coordinates: queryString.location.coordinates}, mostRecentGeopic: queryString, numberOfGeopics: 2});
+
+      queryString.clustered = true;
+      queryString.clusterID = newCluster.insertedId;
+
+
+      const updateNearbyGeopic = await geopics.updateOne({_id: nearbyGeopics[0]._id}, {$set: {clustered: true, clusterID: newCluster.insertedId}});
+
+      const uploadClusteredGeopic = await geopics.insertOne(queryString);
+
+    }
+  } else if(nearbyClusters.length >= 1){
+    console.log("only cluster nearby");
+
+    queryString.clustered = true;
+    queryString.clusterID = nearbyClusters[0]._id;
+
+    const updateClusterNumber = await clusters.updateOne({_id: nearbyClusters[0]._id}, {$set: {numberOfGeopics: nearbyClusters[0].numberOfGeopics+1, mostRecentGeopic: queryString}});
+
+    const uploadClusteredGeopic = await geopics.insertOne(queryString);
+
+  } else{
+    console.log("doing the normal thing");
+    const upload = await geopics.insertOne(queryString);
+    //dispatch(setGeopics(upload));
+    const addGeopicString = queryString;
+    addGeopicString.url = url;
+    dispatch(addGeopic(addGeopicString));
+  }
   //upload using the passes queryString object
-  const upload = await geopics.insertOne(queryString);
-  //dispatch(setGeopics(upload));
-  const addGeopicString = queryString;
-  addGeopicString.url = url;
-  dispatch(addGeopic(addGeopicString));
+
   //console.log(upload);
 }
 
@@ -188,6 +256,7 @@ export const geopicUpload = async (geopicInfo, location, dispatch) => {
 
       //create the geopic object to store in the database
       const geopic = {
+        'clusterID': '',
         'pic': result,
         'caption': geopicInfo.caption,
         'userID': userID,
@@ -202,10 +271,11 @@ export const geopicUpload = async (geopicInfo, location, dispatch) => {
         },
         'timestamp': `${currentTime}`,
         'views': 0,
+        'clustered': false,
         '_partition': 'geopics'
       }
 
-      geopicUploadMongo(geopic, dispatch, geopicInfo.url);
+      geopicUploadMongo(geopic, dispatch, geopicInfo.url, location);
       
       //call mongo to upload to the databse
 }

@@ -14,8 +14,18 @@ import AppLoading from 'expo-app-loading';
 import * as SplashScreen from 'expo-splash-screen';
 import _ from 'underscore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SingleFeedView, getGeopicDataReady } from './FeedView';
+import { SingleFeedView, ScrollFeedView, getGeopicDataReady } from './FeedView';
 import CachedImage from 'react-native-expo-cached-image';
+import { FontAwesome5 } from '@expo/vector-icons';
+
+const Cluster = ({ numberOfGeopics }) => {
+  return(
+    <View style={{ display: 'flex', justiftyContent: 'center', alignItems: 'center' }}>
+      <View style={{ marginBottom: 3 }}><Text style={{ color: 'red' }}>{numberOfGeopics}</Text></View>
+      <FontAwesome5 name="map-marker-alt" size={27} color="red" />
+    </View>
+  )
+}
 
 const DisplayMap = ({ navigation }) => {
     //const [mapShowing, setMapShowing] = useState(true);
@@ -31,16 +41,14 @@ const DisplayMap = ({ navigation }) => {
     const geopics = useSelector(state => state.geopicsReducer);
     
 
-    console.log(geopics.geopics);
+    //console.log(geopics.geopics);
 
     //console.log(location.currentLocation.latitude);
 
     useEffect(() => {
       (async () => {
         if(geopics.geopics != null){
-          console.log("caching!");
           geopics.geopics.map((geopic, index) => {
-            console.log(`caching ${geopic.pic}`);
             return(
             <CachedImage source={{ uri: geopic.pic }} />
             )
@@ -52,7 +60,7 @@ const DisplayMap = ({ navigation }) => {
 
     console.log("refreshed");
 
-    return geopics.geopics != null ? (
+    return geopics.geopics != null || geopics.clusters != null ? (
       <View style={{ flex: 1, overflow: 'hidden', backgroundColor: 'black' }}>
         {/*<NavigationContainer independent={true}>
           <Stack.Navigator screenOptions={{headerShown: false}} initialRoute="Map">
@@ -68,14 +76,22 @@ const DisplayMap = ({ navigation }) => {
               longitudeDelta: 0.08,
             }
           }>
-              {geopics.geopics.map((geopic, index) => {
+              {geopics.geopics != null ? geopics.geopics.map((geopic, index) => {
                 //console.log(geopic.location.coordinates[0]);
                 return <Marker onPress={() => {navigation.navigate('singleView', { geopic: geopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} />
-              })}
+              }) : console.log("no geopics to display")}
+              {geopics.clusters != null ? geopics.clusters.map((cluster, index) => {
+                //console.log(geopic.location.coordinates[0]);
+                return (
+                  <Marker onPress={() => {navigation.navigate('scrollView', { cluster: cluster.geopics })}} key={index} coordinate={{ latitude: cluster.location.coordinates[1], longitude: cluster.location.coordinates[0] }} >
+                    <Cluster numberOfGeopics={cluster.numberOfGeopics} />
+                  </Marker>
+                )
+              }) : console.log("no clusters to display")}
               <StatusBar />
           </MapView>
-          <TouchableOpacity style={{ padding: 0, justiftyContent: 'center', display: 'flex', alignItems: 'center', position: 'absolute',flex: 1, shadowOffset: {width: 0, height: 2}, shadowColor: 'black', shadowOpacity: 0.5, shadowRadius: 2, top: '92%', left: '85%', width: 50, height: 50, backgroundColor: 'turquoise', borderRadius: 10 }} onPress={() => {navigation.navigate("Camera")}} >
-              <Text style={{ fontSize: 50, color:  'white', marginTop: -5 }}>+</Text>
+          <TouchableOpacity style={{ padding: 0, justiftyContent: 'center', display: 'flex', alignItems: 'center', position: 'absolute',flex: 1, shadowOffset: {width: 0, height: 2}, shadowColor: 'black', shadowOpacity: 0.5, shadowRadius: 2, top: '92%', left: '85%', width: 50, height: 50, backgroundColor: 'black', borderRadius: 10 }} onPress={() => {navigation.navigate("Camera")}} >
+              <Text style={{ fontSize: 50, color:  'turquoise', marginTop: -5 }}>+</Text>
           </TouchableOpacity>
       </View>
   ) : (
@@ -90,6 +106,7 @@ export const Map = () => {
     <Stack.Navigator screenOptions={{ animation: 'none', headerShown: false }} initialRouteName="displayMap" >
       <Stack.Screen name="displayMap" component={DisplayMap} />
       <Stack.Screen name="singleView" component={SingleFeedView} />
+      <Stack.Screen name="scrollView" component={ScrollFeedView} />
     </Stack.Navigator> 
   )
 }

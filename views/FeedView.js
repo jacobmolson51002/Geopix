@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Image, View, Text, TouchableOpacity, TouchableHighlight, Button } from 'react-native';
+import { Dimensions, SafeAreaView, Image, View, Text, TouchableOpacity, TouchableHighlight, Button, FlatList } from 'react-native';
 import { getImage } from '../backend/realm';
 import AppLoading from 'expo-app-loading';
 import * as firebase from '../backend/firebaseConfig';
@@ -17,49 +17,15 @@ import CachedImage from 'react-native-expo-cached-image';
     )
 }*/
 
+const SingleView = ({ geopic, navigation }) => {
 
-export const SingleFeedView = ({ route, navigation }) => {
-    //const [geopicData, setGeopicData] = useState(null);
-
-    const { geopic } = route.params;
-
-    //setGeopicData(true);
-
-    //const geopicRef = ref(firebase.storage, props.geopic.pic);
-    
-    /*getDownloadURL(geopicRef)
-    .then((url) => {
-        const geopic = props.geopic;
-        geopic.pic = url;
-        setGeopicData(geopic);
-    })
-    .catch((error) => {
-        // A full list of error codes is available at
-        // https://firebase.google.com/docs/storage/web/handle-errors
-        switch (error.code) {
-        case 'storage/object-not-found':
-            console.log('doesnt exist');
-            break;
-        case 'storage/unauthorized':
-            // User doesn't have permission to access the object
-            console.log('no permissions');
-            break;
-        case 'storage/canceled':
-            // User canceled the upload
-            console.log('canceled upload');
-            break;
-    
-        // ...
-    
-        case 'storage/unknown':
-            // Unknown error occurred, inspect the server response
-            break;
-        }
-    });*/
+    console.log(geopic);
 
     const styles = {
         container: {
-            flex: 1
+            flex: 1,
+            width: '100%',
+            height: Dimensions.get('window').height - 48
         },
         image: {
             width: '101%',
@@ -107,6 +73,45 @@ export const SingleFeedView = ({ route, navigation }) => {
             <TouchableOpacity onPress={() => {navigation.navigate('displayMap')}} style={styles.retakeButtonContainer}>
                 <Text style={styles.retakeButton}>{backButton}</Text>
             </TouchableOpacity>
+        </View>
+    )
+}
+
+export const SingleFeedView = ({ route, navigation }) => {
+    //const [geopicData, setGeopicData] = useState(null);
+
+    const { geopic } = route.params;
+
+    const geopicView = [geopic];
+
+    const renderItem = ({ item }) => <SingleView geopic={item} />;
+    return (
+        <View style={{ flex:  1 }}>
+            <FlatList data={geopicView} renderItem={renderItem} keyExtractor={geopic => geopic._id} />
+        </View>
+    )
+}
+
+export const ScrollFeedView = ({ route, navigation }) => {
+    //const [geopicData, setGeopicData] = useState(null);
+
+    const { cluster } = route.params;
+
+    //console.log("printing cluster");
+
+    //console.log(cluster);
+
+    const renderItem = ({ navigation, item }) => <SingleView navigation={navigation} geopic={item} />;
+    return (
+        <View style={{ flex: 1 }}>
+            <FlatList style={{ flex: 1 }} 
+                      data={cluster} renderItem={renderItem} 
+                      keyExtractor={geopic => geopic._id} 
+                      showsVerticalScrollIndicator={false}
+                      snapToInterval={Dimensions.get('window').height - 48}
+                      snapToAlignment='start'
+                      decelerationRate='fast'
+                      />
         </View>
     )
 }
