@@ -1,7 +1,7 @@
 import { Realm } from '@realm/react';
 import { userSchema } from './schemas';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUserId, setGeopics, setClusters, addGeopic } from '../redux/actions';
+import { setUserId, setGeopics, setClusters, addGeopic, addCluster, updateGeopic } from '../redux/actions';
 import { useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setLocation } from './location';
@@ -115,13 +115,13 @@ export const getGeopics = async () => {
           //query for geopics
           const geopics = mongodb.db('geopics').collection('public');
           const nearbyGeopics = await geopics.find({clustered: false, "location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
-          
+          nearbyGeopics.reverse();
           //query for clusters
           const clusters = mongodb.db('geopics').collection('clusters');
           const nearbyClusters = await clusters.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
           nearbyClusters.map(async (cluster, index) => {
-            const geopicsInCluster = await geopics.find({clusterID: cluster._id}).then((data) => {
-              cluster.geopics = data;
+              const geopicsInCluster = await geopics.find({clusterID: cluster._id}).then((data) => {
+              cluster.geopics = data.reverse();
             });
           })
           
@@ -138,16 +138,158 @@ export const getGeopics = async () => {
 
 }
 
+export const deleteManyGeopics = async () => {
+  const mongodb = app.currentUser.mongoClient('mongodb-atlas');
+  const geopics = mongodb.db('geopics').collection('public');
+
+  const result = await geopics.deleteMany({_partition: 'geopics'});
+  console.log(result);
+}
+
+export const uploadManyGeopics = async (location, num) => {
+  //connect to databse with credentials
+  const mongodb = app.currentUser.mongoClient('mongodb-atlas');
+
+  //access the geopics collection
+  const geopics = mongodb.db('geopics').collection('public');
+  const clusters = mongodb.db('geopics').collection('clusters');
+  for(let i = 0; i < num; i++){
+
+    let longitude = String(location.currentLocation.longitude).slice("");
+    let latitude = String(location.currentLocation.latitude).slice("");
+
+    //console.log(longitude);
+    //console.log(latitude);
+    //console.log("space");
+  
+    let newLatitude = "";
+    let newLongitude = "";
+  
+    for(let i = 0; i < longitude.length; i++){
+      if( i === longitude.length-12 || i === longitude.length-11 || i === longitude.length-10 || i === longitude.length-9 || i === longitude.length-8 || i === longitude.length-7 || i === longitude.length-6 || i === longitude.length-5 || i === longitude.length-4 || i === longitude.length-3 || i === longitude.length-2 || i === longitude.length-1){
+        newLongitude += String(Math.floor(Math.random() * 9));
+      }else{
+        newLongitude += longitude[i];
+      }
+    }
+    for(let i = 0; i < latitude.length; i++){
+      if( i == latitude.length-11 || i == latitude.length-10 || i == latitude.length-9 || i == latitude.length-8 || i == latitude.length-7 || i == latitude.length-6 || i == latitude.length-5 || i == latitude.length-4 || i == latitude.length-3 || i == latitude.length-2 || i == latitude.length-1){
+        newLatitude += String(Math.floor(Math.random() * 9));
+      }else{
+        newLatitude += latitude[i];
+      }
+    }
+
+    latitude = parseFloat(newLatitude);
+    longitude = parseFloat(newLongitude);
+
+    //console.log(longitude);
+    //console.log(latitude);
+    
+
+    const caption = 'funny caption';
+    const currentTime = new Date();
+
+    const queryString = {
+      'clusterID': '',
+      'pic': 'https://firebasestorage.googleapis.com/v0/b/geopix-295e8.appspot.com/o/62b3a20db7a838d899253844%2FSat%20Jul%2009%202022%2009%3A08%3A38%20GMT-0500%20(CDT)?alt=media&token=6dd10eb0-2b8f-4082-b37c-a41802461974',
+      'caption': caption,
+      'userID': '62b3a20db7a838d899253844',
+      'username': 'jacobmolson',
+      'votes': [0,0,0],
+      'flags': [],
+      'hidden': false,
+      'comments': 0,
+      'location': {
+        'type': 'Point',
+        'coordinates': [longitude, latitude]
+      },
+      'timestamp': `${currentTime}`,
+      'views': 0,
+      'clustered': false,
+      '_partition': 'geopics'
+    }
+
+    const nearbyGeopics = await geopics.find({clustered: false, "location": { $near: { $geometry: { type: "Point", coordinates: [longitude, latitude] }, $maxDistance: 25}}});
+    const nearbyClusters = await clusters.find({"location": { $near: { $geometry: { type: "Point", coordinates: [longitude, latitude] }, $maxDistance: 25}}});
+    
+    //console.log(nearbyGeopics);
+    //console.log(nearbyClusters);
+
+    if (nearbyGeopics.length >= 1) {
+      if(nearbyClusters.length >= 1){
+        console.log("geopics and clusters nearby");
+
+
+        queryString.clustered = true;
+        queryString.clusterID = nearbyClusters[0]._id;
+
+        const updateClusterNumber = await clusters.updateOne({_id: nearbyClusters[0]._id}, {$set: {numberOfGeopics: nearbyClusters[0].numberOfGeopics+2, mostRecentGeopic: queryString}});
+
+        const updateNearbyGeopic = await geopics.updateOne({_id: nearbyGeopics[0]._id}, {$set: {clustered: true, clusterID: nearbyClusters[0]._id}});
+
+        const uploadClusteredGeopic = await geopics.insertOne(queryString);
+
+      }else{
+
+        console.log("creating new cluster");
+        //creating new cluster
+        //const clusterCoordinate = [(queryString.location.coordinates[0]) + (nearbyGeopics[0].location.coordinates[0]) / 2.0, (queryString.location.coordinates[1]) + (nearbyGeopics[0].location.coordinates[1]) / 2.0];
+
+        const cluster = {
+          location: {type: "Point", coordinates: queryString.location.coordinates},
+          mostRecentGeopic: queryString,
+          numberOfGeopics: 2
+        }
+        const newCluster = await clusters.insertOne(cluster);
+
+        queryString.clustered = true;
+        queryString.clusterID = newCluster.insertedId;
+
+
+        const updateNearbyGeopic = await geopics.updateOne({_id: nearbyGeopics[0]._id}, {$set: {clustered: true, clusterID: newCluster.insertedId}});
+
+        const uploadClusteredGeopic = await geopics.insertOne(queryString);
+
+        /*newDispatchGeopics.map((geopic, index) => {
+          if(geopic._id === nearbyGeopics[0]._id){
+            console.log('geopic found');
+            geopic.clustered = true
+            geopic.clusterID = nearbyClusters[0]._id;
+          }
+        });*/
+
+      }
+    } else if(nearbyClusters.length >= 1){
+      console.log("only cluster nearby");
+
+      queryString.clustered = true;
+      queryString.clusterID = nearbyClusters[0]._id;
+
+      const updateClusterNumber = await clusters.updateOne({_id: nearbyClusters[0]._id}, {$set: {numberOfGeopics: nearbyClusters[0].numberOfGeopics+1, mostRecentGeopic: queryString}});
+
+      const uploadClusteredGeopic = await geopics.insertOne(queryString);
+
+    } else{
+      console.log("doing the normal thing");
+      const upload = await geopics.insertOne(queryString);
+    }
+  }
+  //upload using the passes queryString object
+
+  //console.log(upload);
+}
+
 //function to write a geopic to mongo
-export const geopicUploadMongo = async (queryString, dispatch, url, location) => {
+export const geopicUploadMongo = async (queryString, dispatch, dispatchData, url, location) => {
   //connect to databse with credentials
   const mongodb = app.currentUser.mongoClient('mongodb-atlas');
   //access the geopics collection
   const geopics = mongodb.db('geopics').collection('public');
   const clusters = mongodb.db('geopics').collection('clusters');
 
-  const nearbyGeopics = await geopics.find({clustered: false, "location": { $near: { $geometry: { type: "Point", coordinates: [location.currentLocation.longitude, location.currentLocation.latitude] }, $maxDistance: 50}}});
-  const nearbyClusters = await clusters.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.currentLocation.longitude, location.currentLocation.latitude] }, $maxDistance: 50}}});
+  const nearbyGeopics = await geopics.find({clustered: false, "location": { $near: { $geometry: { type: "Point", coordinates: [location.currentLocation.longitude, location.currentLocation.latitude] }, $maxDistance: 25}}});
+  const nearbyClusters = await clusters.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.currentLocation.longitude, location.currentLocation.latitude] }, $maxDistance: 25}}});
   
   //console.log(nearbyGeopics);
   //console.log(nearbyClusters);
@@ -166,13 +308,41 @@ export const geopicUploadMongo = async (queryString, dispatch, url, location) =>
 
       const uploadClusteredGeopic = await geopics.insertOne(queryString);
 
+      newDispatchClusters = dispatchData.clusters;
+
+      newDispatchClusters.map((cluster, index) => {
+        if(cluster._id === nearbyClusters[0]._id){
+          cluster.numberOfGeopics = cluster.numberOfGeopics + 2;
+          cluster.mostRecentGeopic = queryString;
+          cluster.geopics.push(queryString, nearbyGeopics[0]);
+        }
+      });
+      dispatch(setClusters(newDispatchClusters));
+
+      newDispatchGeopics = dispatchData.geopics;
+
+      newDispatchGeopics.map((geopic, index) => {
+        if(geopic._id === nearbyGeopics[0]._id){
+          geopic.clustered = true
+          geopic.clusterID = nearbyClusters[0]._id;
+        }
+      });
+
+      dispatch(setGeopics(newDispatchGeopics));
+      dispatch(addGeopic(queryString));
+
     }else{
 
       console.log("creating new cluster");
       //creating new cluster
       //const clusterCoordinate = [(queryString.location.coordinates[0]) + (nearbyGeopics[0].location.coordinates[0]) / 2.0, (queryString.location.coordinates[1]) + (nearbyGeopics[0].location.coordinates[1]) / 2.0];
 
-      const newCluster = await clusters.insertOne({ location: {type: "Point", coordinates: queryString.location.coordinates}, mostRecentGeopic: queryString, numberOfGeopics: 2});
+      const cluster = {
+        location: {type: "Point", coordinates: queryString.location.coordinates},
+        mostRecentGeopic: queryString,
+        numberOfGeopics: 2
+      }
+      const newCluster = await clusters.insertOne(cluster);
 
       queryString.clustered = true;
       queryString.clusterID = newCluster.insertedId;
@@ -181,6 +351,23 @@ export const geopicUploadMongo = async (queryString, dispatch, url, location) =>
       const updateNearbyGeopic = await geopics.updateOne({_id: nearbyGeopics[0]._id}, {$set: {clustered: true, clusterID: newCluster.insertedId}});
 
       const uploadClusteredGeopic = await geopics.insertOne(queryString);
+
+      cluster.geopics = [queryString, nearbyGeopics[0]];
+
+      dispatch(addCluster(cluster));
+
+      /*newDispatchGeopics.map((geopic, index) => {
+        if(geopic._id === nearbyGeopics[0]._id){
+          console.log('geopic found');
+          geopic.clustered = true
+          geopic.clusterID = nearbyClusters[0]._id;
+        }
+      });*/
+
+
+
+      dispatch(updateGeopic({geopic: nearbyGeopics[0], clusterID: newCluster.insertedId}));
+      dipatch(addGeopic(queryString));
 
     }
   } else if(nearbyClusters.length >= 1){
@@ -192,6 +379,19 @@ export const geopicUploadMongo = async (queryString, dispatch, url, location) =>
     const updateClusterNumber = await clusters.updateOne({_id: nearbyClusters[0]._id}, {$set: {numberOfGeopics: nearbyClusters[0].numberOfGeopics+1, mostRecentGeopic: queryString}});
 
     const uploadClusteredGeopic = await geopics.insertOne(queryString);
+
+    newDispatchClusters = dispatchData.clusters;
+
+    newDispatchClusters.map((cluster, index) => {
+      if(cluster._id === nearbyClusters[0]._id){
+        cluster.numberOfGeopics = cluster.numberOfGeopics + 1;
+        cluster.mostRecentGeopic = queryString;
+        cluster.geopics.push(queryString);
+      }
+    });
+    dispatch(setClusters(newDispatchClusters));
+
+    dispatch(addGeopic(queryString));
 
   } else{
     console.log("doing the normal thing");
@@ -206,7 +406,7 @@ export const geopicUploadMongo = async (queryString, dispatch, url, location) =>
   //console.log(upload);
 }
 
-export const geopicUpload = async (geopicInfo, location, dispatch) => {
+export const geopicUpload = async (geopicInfo, location, dispatch, dispatchData) => {
 
       //get current time
       let currentTime = new Date();
@@ -275,7 +475,7 @@ export const geopicUpload = async (geopicInfo, location, dispatch) => {
         '_partition': 'geopics'
       }
 
-      geopicUploadMongo(geopic, dispatch, geopicInfo.url, location);
+      geopicUploadMongo(geopic, dispatch, dispatchData, geopicInfo.url, location);
       
       //call mongo to upload to the databse
 }
@@ -307,6 +507,13 @@ export const openRealm = async () => {
     } catch (err) {
       console.error("failed to open realm", err.message);
     }
+}
+
+export const hideGeopic = async (geopic) => {
+  const mongodb = app.currentUser.mongoClient('mongodb-atlas');
+  //access the geopics collection
+  const geopics = mongodb.db('geopics').collection('public');
+  await geopics.updateOne({_id: geopic._id}, {$set: {hidden: true}});
 }
 
 /*

@@ -1,4 +1,4 @@
-import { CURRENT_LOCATION, USER_ID, GEOPICS, ADD_GEOPIC, SET_CLUSTERS } from './actions';
+import { CURRENT_LOCATION, USER_ID, SET_GEOPICS, ADD_GEOPIC, SET_CLUSTERS, ADD_CLUSTER, UPDATE_GEOPIC } from './actions';
 
 const initializeUserState = {
     userID: 'this is something',
@@ -26,14 +26,30 @@ export function userReducer(state = initializeUserState, action){
     }
 }
 
+function editGeopicState(geopics, action){
+    newGeopics = geopics;
+    newGeopics.geopics.map((geopic) => {
+        if(geopic._id === action.payload.geopic._id){
+            console.log('geopic found');
+            geopic.clustered = true
+            geopic.clusterID = action.payload.clusterID;
+        }
+    });
+    return newGeopics
+}
+
 export function geopicsReducer(state = initilizeGeopicsState, action){
     switch(action.type){
-        case GEOPICS:
+        case SET_GEOPICS:
             return{...state, geopics: action.payload};
         case SET_CLUSTERS:
             return{...state, clusters: action.payload};
         case ADD_GEOPIC:
             return{...state, geopics: [...state.geopics, action.payload]}
+        case ADD_CLUSTER:
+            return{...state, clusters: [...state.clusters, action.payload]}
+        case UPDATE_GEOPIC:
+            return {...state, geopics: editGeopicState(...state, action)};
         default: 
             return state;
     }

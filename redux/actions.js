@@ -1,9 +1,11 @@
 export const USER_ID = 'USER_ID';
 export const CURRENT_LOCATION = 'CURRENT_LOCATION';
 export const CHANGE_NAV_STATE = 'CHANGE_NAV_STATE';
-export const GEOPICS = 'GEOPICS';
+export const SET_GEOPICS = 'GEOPICS';
 export const SET_CLUSTERS = 'SET_CLUSTERS';
 export const ADD_GEOPIC = 'ADD_GEOPIC';
+export const ADD_CLUSTER = 'ADD_CLUSTER';
+export const UPDATE_GEOPIC = 'UPDATE_GEOPIC';
 
 export const setUserId = userID => dispatch => {
     dispatch({
@@ -21,7 +23,7 @@ export const setCurrentLocation = currentLocation => dispatch => {
 
 export const setGeopics = geopics => dispatch => {
     dispatch({
-        type: GEOPICS,
+        type: SET_GEOPICS,
         payload: geopics
     })
 }
@@ -37,5 +39,19 @@ export const addGeopic = geopic => dispatch => {
     dispatch({
         type: ADD_GEOPIC,
         payload: geopic
+    })
+}
+
+export const addCluster = cluster => dispatch => {
+    dispatch({
+        type: ADD_CLUSTER,
+        payload: cluster
+    })
+}
+
+export const updateGeopic = newGeopicInfo => dispatch => {
+    dispatch({
+        type: UPDATE_GEOPIC,
+        payload: newGeopicInfo
     })
 }

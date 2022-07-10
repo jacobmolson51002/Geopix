@@ -191,6 +191,7 @@ const Options = ({ route, navigation }) => {
 
 const ReviewAndUpload = ({ route, navigation }) => {
   const location = useSelector(state => state.userReducer);
+  const dispatchData = useSelector(state => state.geopicsReducer);
   const dispatch = useDispatch();
   const [caption, setCaption] = useState("");
   
@@ -198,7 +199,7 @@ const ReviewAndUpload = ({ route, navigation }) => {
   const { url } = route.params;
 
   const uploadGeopic = async () => {
-    geopicUpload({url: url, caption: caption}, location, dispatch);
+    geopicUpload({url: url, caption: caption}, location, dispatch, dispatchData);
     navigation.navigate('AppHome');
   }
 
