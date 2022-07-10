@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Dimensions, SafeAreaView, Image, View, Text, TouchableOpacity, TouchableHighlight, Button, FlatList } from 'react-native';
-import { getImage } from '../backend/realm';
+import { getImage, getComments } from '../backend/realm';
 import AppLoading from 'expo-app-loading';
 import * as firebase from '../backend/firebaseConfig';
 import { initializeApp } from "firebase/app";
@@ -8,6 +8,9 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import CachedImage from 'react-native-expo-cached-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSelector } from 'react-redux';
+import Animated from 'react-native-reanimated';
+import BottomSheet from 'reanimated-bottom-sheet';
+
 
 /*export const DisplayImage = (imageUrl) => {
     console.log(imageUrl);
@@ -19,6 +22,18 @@ import { useSelector } from 'react-redux';
     )
 }*/
 
+const CommentSection = () => {
+    return (
+        <View>
+        <BottomSheet
+            snapPoints={["75%"]}
+            index={0}
+            handleHeight={40}
+            enablePanDownToClose />
+        </View>
+    )
+  }
+
 class SingleView extends React.PureComponent {
 
     render () {
@@ -26,6 +41,9 @@ class SingleView extends React.PureComponent {
         console.log("rendered");
         const { geopic } = this.props;
         const { navigation } = this.props;
+        const { sheetRef } = this.props;
+        const { setCurrentGeopic } = this.props;
+        const { setComments } = this.props;
         const styles = {
             container: {
                 flex: 1,
@@ -96,6 +114,13 @@ class SingleView extends React.PureComponent {
                 }
             }
         }
+        const viewComments = async () => {
+            const geopicComments = await getComments(geopic._id);
+            setComments(geopicComments);
+            setCurrentGeopic(geopic); 
+            sheetRef.current.snapTo(1)
+        }
+
         return (
             <View style={styles.container}>
                 <View style={styles.topBox} >
@@ -106,12 +131,10 @@ class SingleView extends React.PureComponent {
                     <View style={styles.captionBox}>
                         <Text style={{ fontWeight: 'bold', color: 'white', paddingBottom: 5}}>{geopic.username}      <Text style={{ fontWeight: 'normal', fontSize: 12, color: "#bebebe" }}>{Math.floor(displayTime)} {units} {displayTime === "now" ? "" : "ago"}</Text></Text>
                         <Text style={styles.captionText}>{geopic.caption}</Text>
+                        <TouchableOpacity onPress={() => {viewComments()}} ><Text>comments</Text></TouchableOpacity>
                     </View>
                 </View>
-                
-                <TouchableOpacity onPress={() => {navigation.navigate('displayMap')}} style={styles.retakeButtonContainer}>
-                    <Text style={styles.retakeButton}>{backButton}</Text>
-                </TouchableOpacity>
+
                 
             </View>
         )
@@ -161,6 +184,9 @@ export const FeedView = (props) => {
     //const [geopicData, setGeopicData] = useState(null);
     let geopics = props.data.geopics;
     let clusters = props.data.clusters;
+    const sheetRef = props.sheetRef;
+    const setCurrentGeopic = props.setCurrentGeopic;
+    const setComments = props.setComments;
 
     clusters.map((cluster) => {
         console.log(cluster.geopics);
@@ -185,7 +211,7 @@ export const FeedView = (props) => {
     //console.log(cluster);
 
     const renderItem = useCallback(
-        ({ item }) => <SingleView geopic={item} />,
+        ({ item }) => <SingleView setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />,
         []
     );
     const keyExtractor = useCallback((item) => item._id, []);

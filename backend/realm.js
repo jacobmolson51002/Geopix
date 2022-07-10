@@ -516,6 +516,14 @@ export const hideGeopic = async (geopic) => {
   await geopics.updateOne({_id: geopic._id}, {$set: {hidden: true}});
 }
 
+export const getComments = async (id) => {
+  const mongodb = app.currentUser.mongoClient('mongodb-atlas');
+  const allComments = mongodb.db('geopics').collection('comments');
+  const comments = await allComments.find({geopicID: id});
+  console.log(comments);
+  return(comments);
+}
+
 /*
 export const getRealm = () => {
   // MongoDB RealmConfiguration
