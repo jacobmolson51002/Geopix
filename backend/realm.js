@@ -524,6 +524,18 @@ export const getComments = async (id) => {
   return(comments);
 }
 
+export const addComment = async (commentToAdd, id) => {
+  const mongodb = app.currentUser.mongoClient('mongodb-atlas');
+  const allComments = mongodb.db('geopics').collection('comments');
+
+  //update comment count
+  const addedComment = await allComments.insertOne(commentToAdd);
+}
+
+export const vote = async (geopic, vote, type) => {
+  console.log('voted');
+}
+
 /*
 export const getRealm = () => {
   // MongoDB RealmConfiguration

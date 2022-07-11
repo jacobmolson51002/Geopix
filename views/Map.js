@@ -8,7 +8,7 @@ import { Provider } from  'react-redux';
 import { Store } from '../redux/store';
 import { useSelector } from 'react-redux';
 import { CameraView } from './CameraView';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AppLoading from 'expo-app-loading';
 import * as SplashScreen from 'expo-splash-screen';
@@ -27,13 +27,15 @@ const Cluster = ({ numberOfGeopics }) => {
   )
 }
 
-const DisplayMap = ({ navigation }) => {
+const DisplayMap = ({ sheetRef, setCurrentGeopic, setComments }) => {
     //const [mapShowing, setMapShowing] = useState(true);
     //const [geopicData, setGeopicData] = useState(null);
     const [geopicDataReady, setGeopicDataReady] = useState(false);
   //queryMongo();
     //setLocation();
     getGeopics();
+
+    const navigation = useNavigation();
     
     
     
@@ -93,13 +95,13 @@ const DisplayMap = ({ navigation }) => {
               {geopics.geopics != null ? geopics.geopics.map((geopic, index) => {
                 //console.log(geopic.location.coordinates[0]);
                 if(geopic.hidden === false && geopic.clustered === false && greaterThan3Days(geopic) === false){
-                  return <Marker onPress={() => {navigation.navigate('singleView', { geopic: geopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} />
+                  return <Marker onPress={() => {navigation.navigate('singleView', { geopic: geopic, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} />
                 }
               }) : console.log("no geopics to display")}
               {geopics.clusters != null ? geopics.clusters.map((cluster, index) => {
                 //console.log(geopic.location.coordinates[0]);
                 return (
-                  <Marker onPress={() => {navigation.navigate('scrollView', { cluster: cluster.geopics })}} key={index} coordinate={{ latitude: cluster.location.coordinates[1], longitude: cluster.location.coordinates[0] }} >
+                  <Marker onPress={() => {navigation.navigate('scrollView', { cluster: cluster.geopics, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: cluster.location.coordinates[1], longitude: cluster.location.coordinates[0] }} >
                     <Cluster numberOfGeopics={cluster.numberOfGeopics} />
                   </Marker>
                 )
@@ -116,13 +118,15 @@ const DisplayMap = ({ navigation }) => {
 }
 
 
-export const Map = () => {
+export const Map = ({ sheetRef, setCurrentGeopic, setComments }) => {
   const Stack = createNativeStackNavigator();
   return (
     <Stack.Navigator screenOptions={{ animation: 'none', headerShown: false }} initialRouteName="displayMap" >
-      <Stack.Screen name="displayMap" component={DisplayMap} />
+      <Stack.Screen name="displayMap" children={() => <DisplayMap setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef}/>} />
       <Stack.Screen name="singleView" component={SingleFeedView} />
       <Stack.Screen name="scrollView" component={ClusterFeedView} />
+      {/*<Stack.Screen name="singleView" children={() => <SingleFeedView setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} />} />*/}
+      {/*<Stack.Screen name="scrollView" children={() => <ClusterFeedView setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} />} />*/}
     </Stack.Navigator> 
   )
 }

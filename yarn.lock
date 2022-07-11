@@ -3872,6 +3872,11 @@ expo-keep-awake@~10.1.1:
   resolved "https://registry.npmjs.org/expo-keep-awake/-/expo-keep-awake-10.1.1.tgz"
   integrity sha512-9zC0sdhQljUeMr2yQ7o4kzEZXVAy82fFOAZE1+TwPL7qR0b0sphe7OJ5T1GX1qLcwuVaJ8YewaPoLSHRk79+Rg==
 
+expo-linear-gradient@~11.3.0:
+  version "11.3.0"
+  resolved "https://registry.yarnpkg.com/expo-linear-gradient/-/expo-linear-gradient-11.3.0.tgz#855f470c9684f5b979c3c1be0ed1fe1943d57158"
+  integrity sha512-gm0cULqE5cTP39HZHi+eCGgQ2qMcwym92DwSzRpA5nA4Ah5oKksV+PwD7zzo6YJt3X3lgqrTYEqts9VQISCTgw==
+
 expo-location@~14.2.2:
   version "14.2.2"
   resolved "https://registry.npmjs.org/expo-location/-/expo-location-14.2.2.tgz"
@@ -6869,7 +6874,7 @@ realm@>=10.17.0, realm@^10.19.0:
 
 reanimated-bottom-sheet@^1.0.0-alpha.22:
   version "1.0.0-alpha.22"
-  resolved "https://registry.yarnpkg.com/reanimated-bottom-sheet/-/reanimated-bottom-sheet-1.0.0-alpha.22.tgz#01a200946f1a461f01f1e773e5b4961c2df2e53b"
+  resolved "https://registry.npmjs.org/reanimated-bottom-sheet/-/reanimated-bottom-sheet-1.0.0-alpha.22.tgz"
   integrity sha512-NxecCn+2iA4YzkFuRK5/b86GHHS2OhZ9VRgiM4q18AC20YE/psRilqxzXCKBEvkOjP5AaAvY0yfE7EkEFBjTvw==
 
 recast@^0.20.4:
