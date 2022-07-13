@@ -334,7 +334,7 @@ export const FeedView = (props) => {
     //console.log(cluster);
 
     const renderItem = useCallback(
-        ({ item }) => <SingleView test={test} setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />,
+        ({ item }) => <SingleView setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />,
         []
     );
     const keyExtractor = useCallback((item) => item._id, []);

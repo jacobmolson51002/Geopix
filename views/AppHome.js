@@ -19,6 +19,7 @@ import { getComments, addComment, getTime } from '../backend/database';
 import Animated from 'react-native-reanimated';
 import BottomSheet from 'reanimated-bottom-sheet';
 import { Votes } from './FeedView';
+import { StatusBar } from 'expo-status-bar';
 
         
 

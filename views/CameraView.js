@@ -199,7 +199,7 @@ const ReviewAndUpload = ({ route, navigation }) => {
   const { url } = route.params;
 
   const uploadGeopic = async () => {
-    geopicUpload({url: url, caption: caption}, location, dispatch, dispatchData);
+    await geopicUpload({url: url, caption: caption}, location, dispatch, dispatchData);
     navigation.navigate('AppHome');
   }
 

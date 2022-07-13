@@ -18,7 +18,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import AppLoading from 'expo-app-loading';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
+import { StatusBar } from 'expo-status-bar';
+import { getGeopics } from './backend/database';
 
 const App = () => {
 
@@ -71,6 +72,7 @@ const App = () => {
                     <Stack.Screen name="AppContainer" component={AppContainer} />
                     <Stack.Screen name="Login" component={Login} />
                 </Stack.Navigator>
+                <StatusBar />
             </NavigationContainer> 
         </View>
       </Provider>

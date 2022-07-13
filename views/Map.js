@@ -33,7 +33,6 @@ const DisplayMap = ({ sheetRef, setCurrentGeopic, setComments }) => {
     const [geopicDataReady, setGeopicDataReady] = useState(false);
   //queryMongo();
     //setLocation();
-    getGeopics();
 
     const navigation = useNavigation();
     
@@ -67,7 +66,6 @@ const DisplayMap = ({ sheetRef, setCurrentGeopic, setComments }) => {
       const geopicTime = new Date(geopic.timestamp);
       const timeDifference = currentTime.getTime() - geopicTime.getTime();
       const threeDays = timeDifference / (1000 * 3600 * 24);
-      console.log(threeDays);
       if(threeDays >= 3){
         hideGeopic(geopic);
         return true;
@@ -76,7 +74,7 @@ const DisplayMap = ({ sheetRef, setCurrentGeopic, setComments }) => {
       }
     }
 
-    return geopics.geopics != null || geopics.clusters != null ? (
+    return (
       <View style={{ flex: 1, overflow: 'hidden', backgroundColor: '#222222' }}>
         {/*<NavigationContainer independent={true}>
           <Stack.Navigator screenOptions={{headerShown: false}} initialRoute="Map">
@@ -100,11 +98,11 @@ const DisplayMap = ({ sheetRef, setCurrentGeopic, setComments }) => {
               }) : console.log("no geopics to display")}
               {geopics.clusters != null ? geopics.clusters.map((cluster, index) => {
                 //console.log(geopic.location.coordinates[0]);
-                return (
-                  <Marker onPress={() => {navigation.navigate('scrollView', { cluster: cluster.geopics, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: cluster.location.coordinates[1], longitude: cluster.location.coordinates[0] }} >
-                    <Cluster numberOfGeopics={cluster.numberOfGeopics} />
-                  </Marker>
-                )
+                  return (
+                    <Marker onPress={() => {navigation.navigate('scrollView', { cluster: cluster.geopics, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: cluster.location.coordinates[1], longitude: cluster.location.coordinates[0] }} >
+                      <Cluster numberOfGeopics={cluster.numberOfGeopics} />
+                    </Marker>
+                  )
               }) : console.log("no clusters to display")}
               <StatusBar />
           </MapView>
@@ -112,8 +110,6 @@ const DisplayMap = ({ sheetRef, setCurrentGeopic, setComments }) => {
               <Text style={{ fontSize: 50, color:  'turquoise', marginTop: -5 }}>+</Text>
           </TouchableOpacity>
       </View>
-  ) : (
-    <AppLoading />
   )
 }
 

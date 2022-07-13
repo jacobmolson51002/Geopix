@@ -60,7 +60,17 @@ export const getGeopics = async () => {
           const nearbyClusters = await clusters.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
           nearbyClusters.map(async (cluster, index) => {
               const geopicsInCluster = await geopics.find({clusterID: cluster._id}).then((data) => {
-              cluster.geopics = data.reverse();
+                let geopicsDisplay = [];
+                data.map((geopic) => {
+                  if(!greaterThan3Days(geopic.timestamp)){
+                    geopicsDisplay.unshift(geopic)
+                  }else{
+                    geopics.updateOne({_id: geopic._id}, {$set: {hidden: true}});
+                  }
+                })
+                cluster.numberOfGeopics = geopicsDisplay.length;
+                cluster.geopics = geopicsDisplay;
+                clusters.updateOne({_id: cluster._id}, {$set: {numberOfGeopics: geopicsDisplay.length}});
             });
           })
           
@@ -304,9 +314,20 @@ export const geopicUploadMongo = async (queryString, dispatch, dispatchData, url
       });*/
 
 
+      let geopicDispatchData = dispatchData.geopics;
 
-      dispatch(updateGeopic({geopic: nearbyGeopics[0], clusterID: newCluster.insertedId}));
-      dipatch(addGeopic(queryString));
+      let newGeopicDispatch = [];
+      console.log(newGeopicDispatch);
+      geopicDispatchData.map((geopic) => {
+        console.log(geopic._id);
+        console.log(nearbyGeopics[0]._id);
+        if(geopic._id === nearbyGeopics[0]._id){
+          newGeopicDispatch.push(geopic);
+        }
+      })
+      console.log(newGeopicDispatch);
+      dispatch(setGeopics(newGeopicDispatch));
+      dispatch(addGeopic(queryString));
 
     }
   } else if(nearbyClusters.length >= 1){
@@ -319,13 +340,16 @@ export const geopicUploadMongo = async (queryString, dispatch, dispatchData, url
 
     const uploadClusteredGeopic = await geopics.insertOne(queryString);
 
-    newDispatchClusters = dispatchData.clusters;
+    let dispatchClusters = dispatchData.clusters;
+    let newDispatchClusters = [];
 
-    newDispatchClusters.map((cluster, index) => {
-      if(cluster._id === nearbyClusters[0]._id){
-        cluster.numberOfGeopics = cluster.numberOfGeopics + 1;
-        cluster.mostRecentGeopic = queryString;
-        cluster.geopics.push(queryString);
+    dispatchClusters.map((cluster, index) => {
+      if(cluster._id !== nearbyClusters[0]._id){
+        let newDispatchCluster = cluster;
+        newDispatchCluster.numberOfGeopics = cluster.numberOfGeopics + 1;
+        newDispatchCluster.mostRecentGeopic = queryString;
+        newDispatchCluster.geopics.push(queryString);
+        newDispatchClusters.push(newDispatchCluster);
       }
     });
     dispatch(setClusters(newDispatchClusters));
@@ -528,4 +552,16 @@ export const getTime = (timestamp) => {
       }
   }
   return([displayTime, units]);
+}
+
+export const greaterThan3Days = (timestamp) => {
+  const currentTime = new Date();
+  const geopicTime = new Date(timestamp);
+  const timeDifference = currentTime.getTime() - geopicTime.getTime();
+  const threeDays = timeDifference / (1000 * 3600 * 24);
+  if(threeDays >= 3){
+    return true;
+  }else{
+    return false;
+  }
 }
