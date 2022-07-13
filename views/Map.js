@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, TouchableHighlight, Button, Image } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { queryMongo, getGeopics, getImage, hideGeopic } from '../backend/realm';
+import { queryMongo, getGeopics, getImage, hideGeopic } from '../backend/database';
 import { StatusBar } from 'expo-status-bar';
 import { Provider } from  'react-redux';
 import { Store } from '../redux/store';

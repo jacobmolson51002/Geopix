@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TouchableWithoutFeedback, Keyboard, ScrollView, KeyboardAvoidingView, TextInput, View, Text, TouchableOpacity, ImageBackground, Image, StyleSheet, Button } from 'react-native';
 import { Camera, CameraType } from 'expo-camera';
-import { geopicUpload, loginUser } from '../backend/realm';
+import { geopicUpload, loginUser } from '../backend/database';
 import { setLocation } from '../backend/location';
 import moment from 'moment';
 import { Provider, useDispatch } from 'react-redux';

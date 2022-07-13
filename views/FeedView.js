@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Dimensions, SafeAreaView, Image, View, Text, TouchableOpacity, TouchableHighlight, Button, FlatList } from 'react-native';
-import { getImage, getComments, addComment, vote } from '../backend/realm';
+import { getImage, getComments, addComment, vote, getTime } from '../backend/database';
 import AppLoading from 'expo-app-loading';
 import * as firebase from '../backend/firebaseConfig';
 import { initializeApp } from "firebase/app";
@@ -12,6 +12,41 @@ import Animated from 'react-native-reanimated';
 import BottomSheet from 'reanimated-bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Entypo } from '@expo/vector-icons';
+import { TapGestureHandler, State } from 'react-native-gesture-handler';
+
+
+
+export function DoubleTapButton({ onDoubleTap, children }) {
+    const onHandlerStateChange = ({ nativeEvent }) => {
+      if (nativeEvent.state === State.ACTIVE) {
+        onDoubleTap && onDoubleTap();
+      }
+    };
+  
+    return (
+      <TapGestureHandler
+        onHandlerStateChange={onHandlerStateChange}
+        numberOfTaps={2}>
+        {children}
+      </TapGestureHandler>
+    );
+  }
+
+  export function TripleTapButton({ onDoubleTap, children }) {
+    const onHandlerStateChange = ({ nativeEvent }) => {
+      if (nativeEvent.state === State.ACTIVE) {
+        onDoubleTap && onDoubleTap();
+      }
+    };
+  
+    return (
+      <TapGestureHandler
+        onHandlerStateChange={onHandlerStateChange}
+        numberOfTaps={3}>
+        {children}
+      </TapGestureHandler>
+    );
+  }
 
 
 /*export const DisplayImage = (imageUrl) => {
@@ -31,22 +66,22 @@ export const Votes = ({ voteableItem }) => {
         if(voteCount === 1) {
             setVoteCount(0);
             setDisplayVote(displayVote - 1);
-            vote(voteableItem, -1, 'comment');
+            vote(voteableItem, -1);
         }else{
             setVoteCount(1);
             setDisplayVote(displayVote + 1);
-            vote(voteableItem, 1, 'comment');
+            vote(voteableItem, 1);
         }
     }
     const downVote = async () => {
         if(voteCount === -1) {
             setVoteCount(0);
             setDisplayVote(displayVote + 1);
-            vote(voteableItem, 1, 'comment');
+            vote(voteableItem, 1);
         }else{
             setVoteCount(-1);
             setDisplayVote(displayVote - 1);
-            vote(voteableItem, -1, 'comment');
+            vote(voteableItem, -1);
         }
 
     }
@@ -109,6 +144,8 @@ class SingleView extends React.PureComponent {
         const { sheetRef } = this.props;
         const { setCurrentGeopic } = this.props;
         const { setComments } = this.props;
+
+        let currentComments = {};
         const styles = {
             container: {
                 flex: 1,
@@ -184,55 +221,41 @@ class SingleView extends React.PureComponent {
             }
         }
         const backButton = '<-';
-    
-        const currentDateTime = new Date();
-        const geopicDateTime = new Date(geopic.timestamp);
-        const timeDifference = currentDateTime.getTime() - geopicDateTime.getTime();
-        let displayTime = timeDifference / (86400000);
-        let units = Math.floor(displayTime) > 1 ? "days" : "day";
-        if(displayTime < 1){
-            displayTime = displayTime * 24;
-            units = Math.floor(displayTime) > 1 ? "hrs" : "hr";
-            if(displayTime < 1){
-                displayTime = displayTime * 60;
-                units = Math.floor(displayTime) > 1 ? "mins" : "min";
-                if(displayTime < 1){
-                    units = Math.floor(displayTime) > 1 ? "seconds" : "second";
-                    displayTime = displayTime * 60;
-                    if(displayTime < 1){
-                        displayTime = "now";
-                        units = "";
-                    } 
-                }
-            }
-        }
-        const viewComments = () => {
+        const [timeStamp, units] = getTime(geopic.timestamp);
+
+        const viewComments = async () => {
             //const geopicComments = await getComments(geopic._id);
+            setComments({});
+            sheetRef.current.snapTo(1)
             if(viewed === false){
+                const geopicComments = await getComments(geopic._id);
+                currentComments = geopicComments;
                 viewed = true;
-                setComments({});
+                
                  
             }
             setCurrentGeopic(geopic);
-            sheetRef.current.snapTo(1)
+            setComments(currentComments);
+            
             
 
         }
 
         return (
             <View style={styles.container}>
-                
+                <DoubleTapButton onDoubleTap={() => {console.log("double tap")}}>
                 <CachedImage source={{ uri: geopic.pic }} style={styles.image}/>
+                </DoubleTapButton>
                 <View style={styles.bottomBox} >
                     <View  style={styles.captionBox}>
-                        <Text style={styles.geopicInfo}>{geopic.username}   •   <Text style={{ fontWeight: 'bold', fontSize: 12, color: "white" }}>{Math.floor(displayTime)} {units} {displayTime === "now" ? "" : "ago"}</Text></Text>
+                        <Text style={styles.geopicInfo}>{geopic.username}   •   <Text style={{ fontWeight: 'bold', fontSize: 12, color: "white" }}>{Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}</Text></Text>
                         <View style={styles.captionTextBox} ><Text style={styles.captionText}>{geopic.caption}</Text></View>
                         <TouchableOpacity onPress={() => {viewComments()}} ><Text style={styles.viewCommentsButton}>{geopic.comments} {geopic.comments === 1 ? "comment" : "comments"}</Text></TouchableOpacity>
                     </View>
                     <Votes style={styles.votes} voteableItem={geopic} />
                 </View>
                 <StatusBar />
-                
+               
             </View>
         )
     }
@@ -311,7 +334,7 @@ export const FeedView = (props) => {
     //console.log(cluster);
 
     const renderItem = useCallback(
-        ({ item }) => <SingleView setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />,
+        ({ item }) => <SingleView test={test} setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />,
         []
     );
     const keyExtractor = useCallback((item) => item._id, []);
