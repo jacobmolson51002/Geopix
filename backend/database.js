@@ -9,7 +9,7 @@ import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as Location from 'expo-location';
 import { setCurrentLocation } from '../redux/actions';
-import { app } from './realm';
+import { app, getViewedGeopicsList } from './realm';
 
 //export const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
 
@@ -54,7 +54,8 @@ export const getGeopics = async () => {
           //query for geopics
           const geopics = mongodb.db('geopics').collection('public');
           const nearbyGeopics = await geopics.find({clustered: false, "location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
-          nearbyGeopics.reverse();
+          const viewedGeopicsList = await getViewedGeopicsList(nearbyGeopics);
+          viewedGeopicsList.reverse();
           //query for clusters
           const clusters = mongodb.db('geopics').collection('clusters');
           const nearbyClusters = await clusters.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
@@ -79,7 +80,7 @@ export const getGeopics = async () => {
 
           ]*/
           
-          dispatch(setGeopics(nearbyGeopics));
+          dispatch(setGeopics(viewedGeopicsList));
           dispatch(setClusters(nearbyClusters));
           
       })();
@@ -141,7 +142,7 @@ export const uploadManyGeopics = async (location, num) => {
 
     const queryString = {
       'clusterID': '',
-      'pic': 'https://firebasestorage.googleapis.com/v0/b/geopix-295e8.appspot.com/o/62b3a20db7a838d899253844%2FSat%20Jul%2009%202022%2009%3A08%3A38%20GMT-0500%20(CDT)?alt=media&token=6dd10eb0-2b8f-4082-b37c-a41802461974',
+      'pic': 'https://firebasestorage.googleapis.com/v0/b/geopix-295e8.appspot.com/o/62b3a20db7a838d899253844%2FWed%20Jul%2013%202022%2006%3A38%3A35%20GMT-0500%20(CDT)?alt=media&token=f34482b5-4d95-45d6-96b3-296f1e2658c1',
       'caption': caption,
       'userID': '62b3a20db7a838d899253844',
       'username': 'jacobmolson',

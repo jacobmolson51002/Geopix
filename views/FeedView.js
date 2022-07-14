@@ -3,6 +3,7 @@ import { Dimensions, SafeAreaView, Image, View, Text, TouchableOpacity, Touchabl
 import { getImage, getComments, addComment, vote, getTime } from '../backend/database';
 import AppLoading from 'expo-app-loading';
 import * as firebase from '../backend/firebaseConfig';
+import { geopicViewed } from '../backend/realm';
 import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import CachedImage from 'react-native-expo-cached-image';
@@ -144,7 +145,7 @@ class SingleView extends React.PureComponent {
         const { sheetRef } = this.props;
         const { setCurrentGeopic } = this.props;
         const { setComments } = this.props;
-
+        geopicViewed(geopic._id);
         let currentComments = {};
         const styles = {
             container: {

@@ -1,5 +1,5 @@
 import { Realm } from '@realm/react';
-import { userSchema } from './schemas';
+import { userSchema , viewedSchema} from './schemas';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUserId, setGeopics, setClusters, addGeopic, addCluster, updateGeopic } from '../redux/actions';
 import { useEffect } from 'react';
@@ -80,12 +80,39 @@ export const registerUser = async (email, password) => {
     
 }
 
+export const geopicViewed = async (id) => {
+  const configuration = {
+    schema: [viewedSchema]
+  }
+  const localRealm = await Realm.open(configuration);
+  let newViewedObject;
+  localRealm.write(async () => {
+    newViewedObject = localRealm.create('viewed', { viewedObjectID: id, vote: 0 });
+  })
+}
+
+export const getViewedGeopicsList = async (geopics) => {
+  const configuration = {
+    schema: [viewedSchema]
+  }
+  const localRealm = await Realm.open(configuration);
+  geopics.map((geopic) => {
+    const checkForView = localRealm.objectForPrimaryKey('viewed', geopic._id);
+    if(checkForView != null){
+      geopic.viewed = true;
+    }else{
+      geopic.viewed = false;
+    }
+  });
+  localRealm.close();
+  return geopics;
+}
 
 /*
 export const getRealm = () => {
   // MongoDB RealmConfiguration
   const configuration = {
-    schema: [UserSchema], // add multiple schemas, comma seperated.
+    schema: [UserSchema], [viewedSchema]// add multiple schemas, comma seperated.
     sync: {
       user: app.currentUser, // loggedIn User
       partitionValue: "2F6092d4c594587f582ef165a0", // should be userId(Unique) so it can manage particular user related documents in DB by userId

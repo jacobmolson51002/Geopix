@@ -14,3 +14,12 @@ export const userSchema = {
     },
     primaryKey: '_id'
 }
+
+export const viewedSchema = {
+    name: 'viewed',
+    properties: {
+        viewedObjectID: 'objectId',
+        vote: 'int'
+    },
+    primaryKey: 'viewedObjectID'
+}

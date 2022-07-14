@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, TouchableHighlight, Button, Image } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import MapView, { Marker, Callout, Circle } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { queryMongo, getGeopics, getImage, hideGeopic } from '../backend/database';
+import { openLocalRealm } from '../backend/realm';
 import { StatusBar } from 'expo-status-bar';
 import { Provider } from  'react-redux';
 import { Store } from '../redux/store';
@@ -17,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SingleFeedView, ClusterFeedView, getGeopicDataReady } from './FeedView';
 import CachedImage from 'react-native-expo-cached-image';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 
 const Cluster = ({ numberOfGeopics }) => {
   return(
@@ -74,6 +76,8 @@ const DisplayMap = ({ sheetRef, setCurrentGeopic, setComments }) => {
       }
     }
 
+
+
     return (
       <View style={{ flex: 1, overflow: 'hidden', backgroundColor: '#222222' }}>
         {/*<NavigationContainer independent={true}>
@@ -82,18 +86,30 @@ const DisplayMap = ({ sheetRef, setCurrentGeopic, setComments }) => {
             <Stack.Screen title="Camera" component={CameraView} />
           </Stack.Navigator>
         </NavigationContainer>*/}
-        <MapView style={{ flex: 1, borderWidth: 1, borderColor: 'black', borderRadius: 15 }} region={
+        <MapView style={{ flex: 1, borderWidth: 1, borderColor: 'black', borderRadius: 15 }} initialRegion={
             {
               latitude: location.currentLocation.latitude,
               longitude: location.currentLocation.longitude,
-              latitudeDelta: 0.08,
-              longitudeDelta: 0.08,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
             }
           }>
+              <Circle strokeWidth={0.5} fillColor={'rgba(0,0,0,0.1)'} radius={4830} center={
+                {
+                  latitude: location.currentLocation.latitude, 
+                  longitude: location.currentLocation.longitude
+                }
+              } />
               {geopics.geopics != null ? geopics.geopics.map((geopic, index) => {
                 //console.log(geopic.location.coordinates[0]);
-                if(geopic.hidden === false && geopic.clustered === false && greaterThan3Days(geopic) === false){
-                  return <Marker onPress={() => {navigation.navigate('singleView', { geopic: geopic, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} />
+                if(geopic.hidden === false && geopic.clustered === false && greaterThan3Days(geopic) === false && geopic.viewed === false){
+                  return <Marker centerOffset={{x: 0, y: -20}} onPress={() => {navigation.navigate('singleView', {  geopic: geopic, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} >
+                            <Image source={require('./mapPin.png')} style={{ width: 15, height: 40 }}/>
+                        </Marker>
+                }else if(geopic.viewed) {
+                  return <Marker centerOffset={{x: 0, y: -20}} onPress={() => {navigation.navigate('singleView', {  geopic: geopic, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} >
+                          <Image source={require('./mapPin.png')} style={{ width: 15, height: 40 }}/>
+                        </Marker>
                 }
               }) : console.log("no geopics to display")}
               {geopics.clusters != null ? geopics.clusters.map((cluster, index) => {
