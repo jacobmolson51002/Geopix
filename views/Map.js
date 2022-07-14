@@ -20,11 +20,11 @@ import CachedImage from 'react-native-expo-cached-image';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 
-const Cluster = ({ numberOfGeopics }) => {
+const Cluster = ({ numberOfGeopics, color }) => {
   return(
     <View style={{ display: 'flex', justiftyContent: 'center', alignItems: 'center' }}>
       <View style={{ marginBottom: 3 }}><Text style={{ color: 'red' }}>{numberOfGeopics}</Text></View>
-      <FontAwesome5 style={{ marginBottom: 34 }}name="map-marker-alt" size={27} color="red" />
+      <FontAwesome5 style={{ marginBottom: 34 }}name="map-marker-alt" size={27} color={color} />
     </View>
   )
 }
@@ -114,9 +114,14 @@ const DisplayMap = ({ sheetRef, setCurrentGeopic, setComments }) => {
               }) : console.log("no geopics to display")}
               {geopics.clusters != null ? geopics.clusters.map((cluster, index) => {
                 //console.log(geopic.location.coordinates[0]);
+                  if(cluster.viewed){
+                    <Marker onPress={() => {navigation.navigate('scrollView', { cluster: cluster.geopics, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: cluster.location.coordinates[1], longitude: cluster.location.coordinates[0] }} >
+                      <Cluster color="pink" numberOfGeopics={cluster.numberOfGeopics} />
+                    </Marker>
+                  }
                   return (
                     <Marker onPress={() => {navigation.navigate('scrollView', { cluster: cluster.geopics, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: cluster.location.coordinates[1], longitude: cluster.location.coordinates[0] }} >
-                      <Cluster numberOfGeopics={cluster.numberOfGeopics} />
+                      <Cluster color="red" numberOfGeopics={cluster.numberOfGeopics} />
                     </Marker>
                   )
               }) : console.log("no clusters to display")}

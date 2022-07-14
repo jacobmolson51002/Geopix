@@ -3,7 +3,7 @@ import { Dimensions, SafeAreaView, Image, View, Text, TouchableOpacity, Touchabl
 import { getImage, getComments, addComment, vote, getTime } from '../backend/database';
 import AppLoading from 'expo-app-loading';
 import * as firebase from '../backend/firebaseConfig';
-import { geopicViewed } from '../backend/realm';
+import { geopicViewed, setLocalVote, getViewedComments } from '../backend/realm';
 import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import CachedImage from 'react-native-expo-cached-image';
@@ -14,6 +14,7 @@ import BottomSheet from 'reanimated-bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Entypo } from '@expo/vector-icons';
 import { TapGestureHandler, State } from 'react-native-gesture-handler';
+import { useNavigation } from '@react-navigation/native';
 
 
 
@@ -61,17 +62,25 @@ export function DoubleTapButton({ onDoubleTap, children }) {
 }*/
 
 export const Votes = ({ voteableItem }) => {
-    const [voteCount, setVoteCount] = useState(0);
+    const [voteCount, setVoteCount] = useState(voteableItem.vote != null ? voteableItem.vote : 0);
     const [displayVote, setDisplayVote] = useState(voteableItem.votes[2]);
+    console.log(voteableItem);
     const upVote = async () => {
         if(voteCount === 1) {
             setVoteCount(0);
             setDisplayVote(displayVote - 1);
             vote(voteableItem, -1);
+            setLocalVote(voteableItem.viewed, voteableItem._id, 0);
+        }else if(voteCount === -1){
+            setVoteCount(1);
+            setDisplayVote(displayVote + 2);
+            vote(voteableItem, 2);
+            setLocalVote(voteableItem.viewed, voteableItem._id, 1);
         }else{
             setVoteCount(1);
             setDisplayVote(displayVote + 1);
             vote(voteableItem, 1);
+            setLocalVote(voteableItem.viewed, voteableItem._id, 1);
         }
     }
     const downVote = async () => {
@@ -79,10 +88,17 @@ export const Votes = ({ voteableItem }) => {
             setVoteCount(0);
             setDisplayVote(displayVote + 1);
             vote(voteableItem, 1);
+            setLocalVote(voteableItem.viewed, voteableItem._id, 0);
+        }else if(voteCount === 1){
+            setVoteCount(-1);
+            setDisplayVote(displayVote - 2);
+            vote(voteableItem, -2);
+            setLocalVote(voteableItem.viewed, voteableItem._id, -1);
         }else{
             setVoteCount(-1);
             setDisplayVote(displayVote - 1);
             vote(voteableItem, -1);
+            setLocalVote(voteableItem.viewed, voteableItem._id, -1);
         }
 
     }
@@ -145,19 +161,20 @@ class SingleView extends React.PureComponent {
         const { sheetRef } = this.props;
         const { setCurrentGeopic } = this.props;
         const { setComments } = this.props;
-        geopicViewed(geopic._id);
+        if(geopic.viewed === false){
+            geopicViewed(geopic._id);
+        }
         let currentComments = {};
         const styles = {
             container: {
                 flex: 1,
                 width: '100%',
-                height: Dimensions.get('window').height * 0.9,
                 backgroundColor: 'rgb(34,34,34)',
             },
             image: {
                 width: '101%',
                 flex: 1,
-                height: (Dimensions.get('window').height * .9),
+                height: Dimensions.get('screen').height * 0.9,
                 borderLeftWidth: 0,
                 marginLeft: -1,
                 marginRight: -1
@@ -213,7 +230,6 @@ class SingleView extends React.PureComponent {
             geopicInfo: { 
                 fontWeight: 'bold', 
                 color: 'white', 
-                paddingBottom: 5, 
                 paddingTop: 5,
                 paddingLeft: 15,
                 textShadowColor: 'rgba(0, 0, 0, 0.75)',
@@ -230,7 +246,10 @@ class SingleView extends React.PureComponent {
             sheetRef.current.snapTo(1)
             if(viewed === false){
                 const geopicComments = await getComments(geopic._id);
-                currentComments = geopicComments;
+                let viewedComments = await getViewedComments(geopicComments);
+                viewedComments.reverse();
+                console.log(viewedComments);
+                currentComments = viewedComments;
                 viewed = true;
                 
                  
@@ -242,6 +261,10 @@ class SingleView extends React.PureComponent {
 
         }
 
+        const profile = (username) => {
+            navigation.navigate('viewProfile', { username: username });
+        };
+
         return (
             <View style={styles.container}>
                 <DoubleTapButton onDoubleTap={() => {console.log("double tap")}}>
@@ -249,7 +272,7 @@ class SingleView extends React.PureComponent {
                 </DoubleTapButton>
                 <View style={styles.bottomBox} >
                     <View  style={styles.captionBox}>
-                        <Text style={styles.geopicInfo}>{geopic.username}   •   <Text style={{ fontWeight: 'bold', fontSize: 12, color: "white" }}>{Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}</Text></Text>
+                        <Text style={styles.geopicInfo}><TouchableOpacity style={{ margin: 0,padding: 0 }}onPress={() => {profile(geopic.username)}}><Text style={styles.geopicInfo}>{geopic.username}</Text></TouchableOpacity>   •   <Text style={{ fontWeight: 'bold', fontSize: 12, color: "white" }}>{Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}</Text></Text>
                         <View style={styles.captionTextBox} ><Text style={styles.captionText}>{geopic.caption}</Text></View>
                         <TouchableOpacity onPress={() => {viewComments()}} ><Text style={styles.viewCommentsButton}>{geopic.comments} {geopic.comments === 1 ? "comment" : "comments"}</Text></TouchableOpacity>
                     </View>
@@ -293,7 +316,7 @@ export const ClusterFeedView = ({ route, navigation }) => {
                       data={cluster} renderItem={renderItem} 
                       keyExtractor={geopic => geopic._id} 
                       showsVerticalScrollIndicator={false}
-                      snapToInterval={Dimensions.get('window').height * 0.9}
+                      snapToOffsets={[...Array(cluster.length)].map((x,i) => (i * Dimensions.get('window').height * 0.9))}
                       maxToRenderPerBatch={2}
                       windowSize={2}
                       initialNumToRender={3}
@@ -311,9 +334,10 @@ export const FeedView = (props) => {
     const sheetRef = props.sheetRef;
     const setCurrentGeopic = props.setCurrentGeopic;
     const setComments = props.setComments;
+    const navigation = useNavigation();
 
     clusters.map((cluster) => {
-        console.log(cluster.geopics);
+        //console.log(cluster.geopics);
         const newData = geopics.concat(cluster.geopics);
         geopics = newData;
     });
@@ -335,7 +359,7 @@ export const FeedView = (props) => {
     //console.log(cluster);
 
     const renderItem = useCallback(
-        ({ item }) => <SingleView setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />,
+        ({ item }) => <SingleView navigation={navigation} setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />,
         []
     );
     const keyExtractor = useCallback((item) => item._id, []);
@@ -344,7 +368,7 @@ export const FeedView = (props) => {
                       data={geopics} renderItem={renderItem} 
                       keyExtractor={keyExtractor} 
                       showsVerticalScrollIndicator={false}
-                      snapToInterval={Dimensions.get('window').height * 0.9}
+                      snapToOffsets={[...Array(geopics.length)].map((x,i) => (i * Dimensions.get('window').height * 0.9))}
                       maxToRenderPerBatch={2}
                       windowSize={2}
                       initialNumToRender={3}

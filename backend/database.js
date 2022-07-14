@@ -60,16 +60,25 @@ export const getGeopics = async () => {
           const clusters = mongodb.db('geopics').collection('clusters');
           const nearbyClusters = await clusters.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
           nearbyClusters.map(async (cluster, index) => {
-              const geopicsInCluster = await geopics.find({clusterID: cluster._id}).then((data) => {
+              const geopicsInCluster = await geopics.find({clusterID: cluster._id})
+              const viewedGeopicsInCluster = await getViewedGeopicsList(geopicsInCluster).then((data) => {
                 let geopicsDisplay = [];
+                let viewedCount = 0
                 data.map((geopic) => {
                   if(!greaterThan3Days(geopic.timestamp)){
                     geopicsDisplay.unshift(geopic)
                   }else{
                     geopics.updateOne({_id: geopic._id}, {$set: {hidden: true}});
                   }
+                  if(geopic.viewed == true){
+                    viewedCount = viewedCount + 1;
+                  }
                 })
-                cluster.numberOfGeopics = geopicsDisplay.length;
+                const length = geopicsDisplay.length;
+                cluster.numberOfGeopics = length;
+                if(length == viewedCount){
+                  cluster.viewed = true;
+                }
                 cluster.geopics = geopicsDisplay;
                 clusters.updateOne({_id: cluster._id}, {$set: {numberOfGeopics: geopicsDisplay.length}});
             });
@@ -494,8 +503,11 @@ export const addComment = async (commentToAdd, geopic) => {
   const geopics = mongodb.db('geopics').collection('public');
 
   const addedComment = await allComments.insertOne(commentToAdd);
+  commentToAdd._id = addedComment.insertedId;
+  commentToAdd.viewed = false;
+  commentToAdd.vote = 0;
   await geopics.updateOne({_id: geopic._id}, {$set: {comments: geopic.comments+1}})
-
+  return commentToAdd
 }
 
 export const vote = async (object, vote) => {
@@ -565,4 +577,30 @@ export const greaterThan3Days = (timestamp) => {
   }else{
     return false;
   }
+}
+
+export const getUserInformation = async (username) => {
+  let userInformation = {};
+  const users = mongodb.db('users').collection('info');
+  const geopics = mongodb.db('geopics').collection('public');
+  const comments = mongodb.db('geopics').collection('comments');
+
+  const userInfo = await users.findOne({username: username});
+  const userGeopics = await geopics.find({username: username});
+  const userComments = await comments.find({username: username});
+  let contentArray = await userGeopics.concat(userComments);
+  contentArray.sort((a, b) => {
+    const aTime = new Date(a.timestamp);
+    const bTime = new Date(b.timestamp);
+    if(aTime.getTime() > bTime.getTime()){
+        return -1;
+    }
+    if(aTime.getTime() < bTime.getTime()){
+        return 1;
+    }
+    return 0;
+  });
+  userInformation.geocash = await userInfo.geocash;
+  userInformation.content = await contentArray;
+  return userInformation
 }

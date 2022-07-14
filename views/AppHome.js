@@ -55,14 +55,14 @@ export const AppHome = ({ navigation }) => {
             },
             commentUsername: {
                 color: 'white', 
-                paddingBottom: 5
+                paddingBottom: 5,
+                fontWeight: 'bold'
             },
             comment: {
                 color: "white", 
                 paddingBottom: 5
             },
             timestamp: {
-                marginTop: 5,
                 color: '#bebebe',
                 fontSize: 10
             }
@@ -73,14 +73,14 @@ export const AppHome = ({ navigation }) => {
                 <View style={styles.commentBox} >
                     <Text style={styles.commentUsername}>{comment.username}</Text>
                     <Text style={styles.comment}>{comment.comment}</Text>
-                    <Text style={styles.timestamp}>{Math.floor(timestamp)} {units} {timestamp === "now" ? "" : "ago"}</Text>
+                    <Text style={styles.timestamp}>{timestamp === 'now' ? timestamp : Math.floor(timestamp)} {units} {timestamp === "now" ? "" : "ago"}</Text>
                 </View>
                 <Votes voteableItem={comment} />
             </View>
         )
     }
 
-    const addCommentPressed = () => {
+    const addCommentPressed = async () => {
         const currentTime = new Date();
         //use Async storage to get username
         const username = 'jacobmolson';
@@ -93,11 +93,11 @@ export const AppHome = ({ navigation }) => {
             reply: false,
             timestamp: currentTime
           };
+        const newComment = await addComment(commentToAdd, currentGeopic);
         const newComments = comments;
-        newComments.unshift(commentToAdd);
+        newComments.unshift(newComment);
         setComments(newComments);
         setComment("");
-        addComment(commentToAdd, currentGeopic);
         
     }
 

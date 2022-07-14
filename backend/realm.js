@@ -100,12 +100,55 @@ export const getViewedGeopicsList = async (geopics) => {
     const checkForView = localRealm.objectForPrimaryKey('viewed', geopic._id);
     if(checkForView != null){
       geopic.viewed = true;
+      geopic.vote = checkForView.vote;
     }else{
       geopic.viewed = false;
     }
   });
   localRealm.close();
   return geopics;
+}
+
+export const setLocalVote = async (viewed, id, vote) => {
+  console.log(id);
+  console.log(viewed);
+  console.log(vote);
+  const configuration = {
+    schema: [viewedSchema]
+  }
+  const localRealm = await Realm.open(configuration);
+  if(viewed){
+    const item = localRealm.objectForPrimaryKey('viewed', id);
+    console.log(item);
+    localRealm.write(() => {
+      item.vote = vote;
+      console.log(item);
+    });
+  }else{
+    let item;
+    localRealm.write(() => {
+      item = localRealm.create('viewed', { viewedObjectID: id, vote: vote });
+    })
+  }
+  localRealm.close();
+}
+
+export const getViewedComments = async (comments) => {
+  const configuration = {
+    schema: [viewedSchema]
+  }
+  const localRealm = await Realm.open(configuration);
+  comments.map((comment) => {
+    const checkForView = localRealm.objectForPrimaryKey('viewed', comment._id);
+    if(checkForView != null){
+      comment.viewed = true;
+      comment.vote = checkForView.vote;
+    }else{
+      comment.viewed = false;
+    }
+  });
+  localRealm.close();
+  return comments;
 }
 
 /*
