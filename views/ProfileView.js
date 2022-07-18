@@ -37,11 +37,18 @@ export const ProfileView = ({ navigation, route }) => {
         }
     }
 
+    const messageUser = () => {
+        const recipient = userInformation;
+        recipient.username = username;
+        navigation.navigate('message', { recipient: recipient });
+    }
+
     return userInformation.geocash != '' ? (
         <View style={styles.wrapper}>
             <View style={styles.header}>
                 <Text style={styles.headerText}>{username}</Text>
                 <Text style={styles.geocash}>geocash: <Text style={{ color: 'turquoise' }}>{userInformation.geocash}</Text></Text>
+                <Button onPress={messageUser} title="Message" />
             </View>
         </View>
     ) : (

@@ -1,4 +1,4 @@
-import { CURRENT_LOCATION, USER_ID, SET_GEOPICS, ADD_GEOPIC, SET_CLUSTERS, ADD_CLUSTER, UPDATE_GEOPIC } from './actions';
+import { CURRENT_LOCATION, SET_MESSAGE_DATA, SET_UNREAD_COUNT, USER_ID, SET_GEOPICS, ADD_GEOPIC, SET_CLUSTERS, ADD_CLUSTER, UPDATE_GEOPIC } from './actions';
 
 const initializeUserState = {
     userID: 'this is something',
@@ -6,7 +6,8 @@ const initializeUserState = {
         latitude: 0,
         longitude: 0
     },
-    geopics: null
+    messages: null,
+    unreadCount: 0
 };
 
 const initilizeGeopicsState = {
@@ -17,6 +18,10 @@ const initilizeGeopicsState = {
 
 export function userReducer(state = initializeUserState, action){
     switch(action.type){
+        case SET_MESSAGE_DATA:
+            return {...state, messages: action.payload};
+        case SET_UNREAD_COUNT:
+            return {...statem, unreadCount: action.payload};
         case USER_ID:
             return {...state, userID: action.payload};
         case CURRENT_LOCATION:

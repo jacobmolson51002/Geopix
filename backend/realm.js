@@ -1,5 +1,5 @@
 import { Realm } from '@realm/react';
-import { userSchema , viewedSchema} from './schemas';
+import { userSchema , viewedSchema, Conversation} from './schemas';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUserId, setGeopics, setClusters, addGeopic, addCluster, updateGeopic } from '../redux/actions';
 import { useEffect } from 'react';
@@ -9,6 +9,7 @@ import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as Location from 'expo-location';
 import { setCurrentLocation } from '../redux/actions';
+import {ObjectId} from 'bson';
 
 //initialize realm app
 export const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
@@ -22,7 +23,57 @@ export const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
 ); // LoggingIn as Anonymous User. */
 
 //login anonymously
-const credentials = Realm.Credentials.anonymous();
+//const credentials = Realm.Credentials.anonymous();
+
+export const openUserRealm = async (dispatch) => {
+  console.log(app.currentUser.id);
+  const configuration = {
+    schema: [userSchema, Conversation],// add multiple schemas, comma seperated.
+    sync: {
+      user: app.currentUser, // loggedIn User
+      partitionValue: `${app.currentUser.id}`, // should be userId(Unique) so it can manage particular user related documents in DB by userId
+    }
+  };
+  const userRealm = await Realm.open(configuration);
+  //const test2 = await userRealm.objects('conversations');
+  let test2 = {
+    _id: new ObjectId(),
+    unread: 0,
+    recipients: ["jacobmolson"],
+    lastMessage: "this is the most recent message and it's working",
+    lastMessageFrom: "jacobmolson",
+    lastMessageTimestamp: 'some random time in history',
+    _partition: `${app.currentUser.id}`,
+    conversationID: 'randomid'
+  }
+  userRealm.write(() => {
+    userRealm.create("conversations", test2);
+  })
+  //console.log(test2);
+  /*const userRealm = await Realm.open(configuration).then(realm => {
+    const conversations = realm.objects('Conversation');
+    console.log(conversations);
+    /*const conversations = realm.objects('Conversation');
+    dispatch(setMessageData(conversations));
+    let unreadCount = 0;
+    info.conversations.map((conversation) => {
+      unreadCount += conversation.unread;
+    });
+    dispatch(setUnreadCount(unreadCount));
+    try{
+      info.addListener(() => {
+        dispatch(setMessageData(info.conversations));
+        let unreadCount = 0;
+        info.conversations.map((conversation) => {
+          unreadCount += conversation.unread;
+        });
+        dispatch(setUnreadCount(unreadCount));
+      })
+    }catch (error) {
+      console.warn(`unable to add listener: ${error}`);
+    }
+  });*/
+}
 
 //function to login the user
 export const logUserIn = async (email, password) => {
@@ -65,6 +116,7 @@ export const logUserOut = async () => {
 export const registerUser = async (email, password) => {
     try {
       const registeredUser = await app.emailPasswordAuth.registerUser({ email, password });
+
       logUserIn(email, password);
       return (
         "successful register"

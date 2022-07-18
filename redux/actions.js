@@ -6,6 +6,22 @@ export const SET_CLUSTERS = 'SET_CLUSTERS';
 export const ADD_GEOPIC = 'ADD_GEOPIC';
 export const ADD_CLUSTER = 'ADD_CLUSTER';
 export const UPDATE_GEOPIC = 'UPDATE_GEOPIC';
+export const SET_MESSAGE_DATA = 'SET_MESSAGE_DATA';
+export const SET_UNREAD_COUNT = 'SET_UNREAD_COUNT';
+
+export const setMessageData = messageData => dispatch => {
+    dispatch({
+        type: SET_MESSAGE_DATA,
+        payload: messageData
+    });
+};
+
+export const setUnreadCount = unreadCount => dispatch => {
+    dispatch({
+        type: SET_UNREAD_COUNT,
+        payload: unreadCount
+    });
+};
 
 export const setUserId = userID => dispatch => {
     dispatch({

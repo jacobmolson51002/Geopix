@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, Button, TextInput, StyleSheet } from 'react-native';
-import { useDispatch } from 'react-redux';
-import { setUserId } from '../redux/actions';
-import { logUserIn, registerUser, openRealm } from '../backend/realm';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUserId, setMessageData, setUnreadCount } from '../redux/actions';
+import { logUserIn, registerUser, openRealm, openUserRealm } from '../backend/realm';
 import { setLocation } from '../backend/location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
@@ -16,12 +16,13 @@ export const Login = ({ navigation }) => {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loginScreenShowing, setLoginScreenShowing] = useState(true);
     const [createAccountShowing, setCreateAccountShowing] = useState(false);
+    const dispatch = useDispatch();
 
     const loginHandler = async () => {
 
         const login = await logUserIn(email, password);
         if(login === "successful login") {
-            //openRealm();
+            await openUserRealm(dispatch);
             console.log("success");
             navigation.navigate("AppContainer");
         } else {

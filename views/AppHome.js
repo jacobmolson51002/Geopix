@@ -143,7 +143,7 @@ export const AppHome = ({ navigation }) => {
             padding: 10,
             marginLeft: 15,
             width: '75%',
-            justiftyContent: 'flex-start',
+            justifyContent: 'flex-start',
             flexDirection: 'row',
             flexWrap: 'wrap',
             color: "#bebebe",
@@ -168,7 +168,7 @@ export const AppHome = ({ navigation }) => {
 
     const keyboardStyles = StyleSheet.create({
         keyboardView: {
-            justiftyContent: 'flex-start',
+            justifyContent: 'flex-start',
             width: '100%', 
             height: Dimensions.get('window').height * 0.7, 
             backgroundColor: '#222222' 

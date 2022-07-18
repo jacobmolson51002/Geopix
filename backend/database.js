@@ -372,6 +372,7 @@ export const geopicUploadMongo = async (queryString, dispatch, dispatchData, url
     //dispatch(setGeopics(upload));
     const addGeopicString = queryString;
     addGeopicString.url = url;
+    addGeopicString.viewed = false;
     dispatch(addGeopic(addGeopicString));
   }
   //upload using the passes queryString object

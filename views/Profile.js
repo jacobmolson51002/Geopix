@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Text, View, Button, TextInput } from 'react-native';
-import { logUserOut, uploadManyGeopics, deleteManyGeopics } from '../backend/database';
+import { uploadManyGeopics, deleteManyGeopics } from '../backend/database';
+import { logUserOut } from '../backend/realm';
 import { useSelector } from 'react-redux';
 
 
