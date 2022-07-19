@@ -20,6 +20,7 @@ import Animated from 'react-native-reanimated';
 import BottomSheet from 'reanimated-bottom-sheet';
 import { Votes } from './FeedView';
 import { StatusBar } from 'expo-status-bar';
+import { useSelector } from 'react-redux';
 
         
 
@@ -213,12 +214,57 @@ export const AppHome = ({ navigation }) => {
 
     const sheetRef = React.useRef(null);
 
+    const notifications = useSelector(state => state.userReducer);
+
+
+    const NotificationIcon = ({ notifications, color }) => {
+
+        const styles = {
+            wrapper: {
+
+            },
+            notificationNumber: {
+                width: 16,
+                height: 16,
+                position: 'absolute',
+                top: -3,
+                right: -5,
+                backgroundColor: 'red',
+                borderRadius: 50,
+                display: 'flex',
+                justiftyContent: 'center',
+                alignItems: 'center',
+                textAlign: 'center',
+                zIndex: 2
+            },
+            notificationText: {
+                color: 'white',
+                fontSize: 13,
+                fontWeight: 'bold'
+            }
+        }
+
+        return (
+            <View style={styles.wrapper}>
+                {notifications > 0 ? (
+                    <View style={styles.notificationNumber} >
+                        <View><Text style={styles.notificationText}>{notifications}</Text></View>
+                    </View>
+                ) : (
+                    <View />
+                )}
+                <MaterialCommunityIcons name="mailbox-open-outline" color={color} size={30} />
+            </View>
+        )
+    }
+    
+
     return (
         <View style={{ flex: 1, }}>
         <Tab.Navigator initialRouteName="Map" screenOptions={{ tabBarActiveTintColor: "#30D5C8", tabBarInactiveTintColor: "#77C1BA",headerShown: false, tabBarStyle: { borderTopWidth: 0, display: 'flex',backgroundColor: "#222222", height: '10%', padding: 5 }, tabBarOptions: {tabBarLabel: () => {return null}} }} > 
             <Tab.Screen tabBarOptions={{ showLabel: false }} name="Feed" children={()=><Feed setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef}/>} options={{ tabBarIcon: ({color, size}) => (<MaterialCommunityIcons name="view-day-outline" color={color} size={30} />)}}/>
             <Tab.Screen name="Map" children={() => <Map setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} />} options={{ tabBarIcon: ({color, size}) => (<Entypo name="map" size={24} color={color}/>)}}/>
-            <Tab.Screen name="Inbox" component={Inbox} options={{ tabBarIcon: ({color, size}) => (<MaterialCommunityIcons name="mailbox-open-outline" color={color} size={30} />)}}/>
+            <Tab.Screen name="Inbox" component={Inbox} options={{ tabBarIcon: ({color, size}) => (<NotificationIcon color={color} notifications={notifications.unreadCount} />)}}/>
             <Tab.Screen name="Profile" component={Profile} options={{ tabBarIcon: ({color, size}) => (<FontAwesome5 name="user" color={color} size={23} />)}}/>
         </Tab.Navigator>
 

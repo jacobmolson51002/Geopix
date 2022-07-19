@@ -8,7 +8,7 @@ import { setLocation } from './location';
 import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as Location from 'expo-location';
-import { setCurrentLocation } from '../redux/actions';
+import { setCurrentLocation, setMessageData, setUnreadCount } from '../redux/actions';
 import {ObjectId} from 'bson';
 
 //initialize realm app
@@ -34,45 +34,33 @@ export const openUserRealm = async (dispatch) => {
       partitionValue: `${app.currentUser.id}`, // should be userId(Unique) so it can manage particular user related documents in DB by userId
     }
   };
-  const userRealm = await Realm.open(configuration);
-  //const test2 = await userRealm.objects('conversations');
-  let test2 = {
-    _id: new ObjectId(),
-    unread: 0,
-    recipients: ["jacobmolson"],
-    lastMessage: "this is the most recent message and it's working",
-    lastMessageFrom: "jacobmolson",
-    lastMessageTimestamp: 'some random time in history',
-    _partition: `${app.currentUser.id}`,
-    conversationID: 'randomid'
-  }
-  userRealm.write(() => {
-    userRealm.create("conversations", test2);
-  })
-  //console.log(test2);
-  /*const userRealm = await Realm.open(configuration).then(realm => {
-    const conversations = realm.objects('Conversation');
+  //const userRealm = await Realm.open(configuration);
+  const userRealm = await Realm.open(configuration).then(realm => {
+    const conversations = realm.objects('conversations');
     console.log(conversations);
-    /*const conversations = realm.objects('Conversation');
+    //const conversations = realm.objects('conversations');
     dispatch(setMessageData(conversations));
     let unreadCount = 0;
-    info.conversations.map((conversation) => {
+    conversations.map((conversation) => {
       unreadCount += conversation.unread;
     });
+    console.log(`unread count: ${unreadCount}`);
     dispatch(setUnreadCount(unreadCount));
     try{
-      info.addListener(() => {
-        dispatch(setMessageData(info.conversations));
+      conversations.addListener(() => {
+        console.log(conversations);
+        dispatch(setMessageData(conversations));
         let unreadCount = 0;
-        info.conversations.map((conversation) => {
+        conversations.map((conversation) => {
           unreadCount += conversation.unread;
         });
+        console.log(`unread count: ${unreadCount}`);
         dispatch(setUnreadCount(unreadCount));
       })
     }catch (error) {
       console.warn(`unable to add listener: ${error}`);
     }
-  });*/
+  });
 }
 
 //function to login the user

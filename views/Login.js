@@ -22,7 +22,6 @@ export const Login = ({ navigation }) => {
 
         const login = await logUserIn(email, password);
         if(login === "successful login") {
-            await openUserRealm(dispatch);
             console.log("success");
             navigation.navigate("AppContainer");
         } else {

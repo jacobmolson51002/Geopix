@@ -21,7 +21,7 @@ export function userReducer(state = initializeUserState, action){
         case SET_MESSAGE_DATA:
             return {...state, messages: action.payload};
         case SET_UNREAD_COUNT:
-            return {...statem, unreadCount: action.payload};
+            return {...state, unreadCount: action.payload};
         case USER_ID:
             return {...state, userID: action.payload};
         case CURRENT_LOCATION:
