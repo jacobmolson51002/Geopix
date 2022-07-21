@@ -10,6 +10,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as Location from 'expo-location';
 import { setCurrentLocation, setMessageData, setUnreadCount, setUserRealm } from '../redux/actions';
 import {ObjectId} from 'bson';
+import { updateRecipientConversation } from './database';
 
 //initialize realm app
 export const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
@@ -54,7 +55,8 @@ export const openUserRealm = async (dispatch) => {
   const userRealm = await Realm.open(configuration).then(async (realm) => {
     dispatch(setUserRealm(realm));
 
-    const conversations = await realm.objects('conversations');
+
+    const conversations = await realm.objects('conversations')
 
     //let sortedConversations = await sortByTime(conversations);
 
@@ -216,7 +218,7 @@ export const getViewedComments = async (comments) => {
 }
 
 export const getMessages = async (conversationID, setMessages) => {
-  console.log("this is a test");
+  console.log('ran');
   const configuration = {
     schema: [Message],
     sync: {
@@ -249,6 +251,24 @@ export const updateConversation = async (realm, conversationID) => {
           converationToUpdate.unread = 0;
         });
   }
+}
+
+export const sendMessage = (message, realm, conversationID, userID) => {
+  const messageTimeStamp = new Date();
+  realm.write(() => {
+    realm.create('messages', {
+      _partition: conversationID,
+      message: message,
+      to: "",
+      from: userID,
+      timestamp: messageTimeStamp
+    });
+    let currentConversation = realm.objectForPrimaryKey('conversations', conversationID);
+    currentConversation.lastMessage = message;
+    currentConversation.lastMessageFrom = userID;
+    currentConversation.timestamp = messageTimeStamp;
+  })
+  updateRecipientConversation(message, userID, lastMessageTimestamp, conversationID);
 }
 
 /*

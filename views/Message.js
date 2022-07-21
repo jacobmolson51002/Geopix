@@ -9,14 +9,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const Message = ({ navigation, route }) => {
     const { conversationID } = route.params;
     const [message, setMessage] = useState("");
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState(null);
     const [userID, setUserID] = useState('');
     const realmRedux = useSelector(state => state.userReducer);
     const realm = realmRedux.userRealm;
 
-    updateConversation(realm, conversationID);
+    console.log('test');
+    if(messages == null){
+        updateConversation(realm, conversationID);
 
-    getMessages(conversationID, setMessages);
+        getMessages(conversationID, setMessages);
+    }
     
 
     //updateConversation(realm, conversationID);
@@ -86,7 +89,13 @@ export const Message = ({ navigation, route }) => {
     }
 
     const sendMessage = () => {
-        console.log("sent message");
+        let newMessages = [];
+        messages.map((currentMessage) => {
+            newMessages.push(currentMessage);
+        });
+        newMessages.push({message: message, from: userID});
+        setMessages(newMessages)
+        //sendMessage(message, realm, conversationID, userID);
     }
 
     const MyMessage = (message) => {
@@ -106,13 +115,14 @@ export const Message = ({ navigation, route }) => {
                 backgroundColor: 'turquoise',
                 borderRadius: 25,
                 marginRight: 10,
+                marginTop: 1,
                 justifyContent: 'flex-end'
             }
         }
         return(
             <View style={styles.messageWrapper}>
                 <View style={styles.textBubble}>
-                    <Text>
+                    <Text style={{ display: 'flex', flexWrap: 'wrap' }}>
                         {message.message}
                     </Text>
                 </View>
@@ -131,18 +141,20 @@ export const Message = ({ navigation, route }) => {
                 maxWidth: '60%',
                 flexWrap: 'wrap',
                 display: 'flex',
+                flex: 1,
                 padding: 15,
                 fontSize: 15,
                 color: '#bebebe',
                 backgroundColor: 'gray',
                 borderRadius: 25,
                 marginLeft: 10,
+                marginTop: 1,
             }
         }
         return(
             <View style={styles.messageWrapper}>
                 <View style={styles.textBubble}>
-                    <Text>
+                    <Text style={{ display: 'flex', flexWrap: 'wrap' }}>
                         {message.message}
                     </Text>
                 </View>
@@ -150,12 +162,13 @@ export const Message = ({ navigation, route }) => {
         )
     }
 
-    return(
+    return (
         <View style={styles.wrapper}>
             <View style={styles.topBar}>
                 <Text style={styles.username}>Test</Text>
             </View>
             <ScrollView style={styles.messages}>
+                {messages != null ? (
                 <View style={styles.messagesView}>
                     {messages.map((message, index) => {
                         return(
@@ -168,6 +181,9 @@ export const Message = ({ navigation, route }) => {
                         )
                     })}
                 </View>
+                ) : (
+                    <View style={{ flex: 1, width: '100%', height: '100%', backgroundColor: 'blue' }} />
+                )}
             </ScrollView>
             <KeyboardAvoidingView behavior={'padding'}>
                 <View style={styles.inputView}>

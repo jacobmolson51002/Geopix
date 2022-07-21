@@ -55,7 +55,15 @@ export const getGeopics = async () => {
           const geopics = mongodb.db('geopics').collection('public');
           const nearbyGeopics = await geopics.find({clustered: false, "location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
           const viewedGeopicsList = await getViewedGeopicsList(nearbyGeopics);
-          viewedGeopicsList.reverse();
+          geopicsToDisplay = [];
+          viewedGeopicsList.map((geopic) => {
+            if(!greaterThan3Days(geopic.timestamp)){
+              geopicsToDisplay.unshift(geopic)
+            }else{
+              geopics.updateOne({_id: geopic._id}, {$set: {hidden: true}});
+            }
+          })
+          //viewedGeopicsList.reverse();
           //query for clusters
           const clusters = mongodb.db('geopics').collection('clusters');
           const nearbyClusters = await clusters.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
@@ -89,7 +97,7 @@ export const getGeopics = async () => {
 
           ]*/
           
-          dispatch(setGeopics(viewedGeopicsList));
+          dispatch(setGeopics(geopicsToDisplay));
           dispatch(setClusters(nearbyClusters));
           
       })();
@@ -604,4 +612,14 @@ export const getUserInformation = async (username) => {
   userInformation.geocash = await userInfo.geocash;
   userInformation.content = await contentArray;
   return userInformation
+}
+
+export const updateRecipientConversation = async(message, userID, lastMessageTimestamp, conversationID, recipient){
+  const users = mongodb.db('users').collection('conversations');
+  const findConvo = await users.findOne({_id: conversationID, _partition: recipient});
+  if(findConvo != null){
+    await users.updateOne({_id: conversationID, _partition: recipient}, {$set: {lastMessage: message, lastMessageFrom: userID, lastMessageTimestamp: lastMessageTimestamp, unread: findOne.unread+1}});
+  }else{
+    await users.insertOne({_partition: userID, lastMessage: message, lastMessageFrom: userID, lastMessageTimestamp: lastMessageTimestamp, unread: 1});
+  }
 }
