@@ -1,5 +1,5 @@
 import { Realm } from '@realm/react';
-import { userSchema , viewedSchema, Conversation} from './schemas';
+import { userSchema , viewedSchema, Conversation, Message} from './schemas';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUserId, setGeopics, setClusters, addGeopic, addCluster, updateGeopic } from '../redux/actions';
 import { useEffect } from 'react';
@@ -8,7 +8,7 @@ import { setLocation } from './location';
 import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as Location from 'expo-location';
-import { setCurrentLocation, setMessageData, setUnreadCount } from '../redux/actions';
+import { setCurrentLocation, setMessageData, setUnreadCount, setUserRealm } from '../redux/actions';
 import {ObjectId} from 'bson';
 
 //initialize realm app
@@ -24,6 +24,22 @@ export const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
 
 //login anonymously
 //const credentials = Realm.Credentials.anonymous();
+const sortByTime = (conversations) => {
+  console.log(conversations[0]);
+  let SortedConversations = conversations;
+  SortedConversations.sort((a, b) => {
+    const aTime = new Date(a.lastMessageTimestamp);
+    const bTime = new Date(b.lastMessageTimestamp);
+    if(aTime.getTime() > bTime.getTime()){
+        return -1;
+    }
+    if(aTime.getTime() < bTime.getTime()){
+        return 1;
+    }
+    return 0;
+  });
+  return SortedConversations;
+}
 
 export const openUserRealm = async (dispatch) => {
   console.log(app.currentUser.id);
@@ -35,25 +51,33 @@ export const openUserRealm = async (dispatch) => {
     }
   };
   //const userRealm = await Realm.open(configuration);
-  const userRealm = await Realm.open(configuration).then(realm => {
-    const conversations = realm.objects('conversations');
-    console.log(conversations);
-    //const conversations = realm.objects('conversations');
+  const userRealm = await Realm.open(configuration).then(async (realm) => {
+    dispatch(setUserRealm(realm));
+
+    const conversations = await realm.objects('conversations');
+
+    //let sortedConversations = await sortByTime(conversations);
+
     dispatch(setMessageData(conversations));
+
     let unreadCount = 0;
     conversations.map((conversation) => {
       unreadCount += conversation.unread;
     });
     console.log(`unread count: ${unreadCount}`);
+
     dispatch(setUnreadCount(unreadCount));
+
     try{
       conversations.addListener(() => {
         console.log(conversations);
         dispatch(setMessageData(conversations));
+
         let unreadCount = 0;
         conversations.map((conversation) => {
           unreadCount += conversation.unread;
         });
+
         console.log(`unread count: ${unreadCount}`);
         dispatch(setUnreadCount(unreadCount));
       })
@@ -189,6 +213,42 @@ export const getViewedComments = async (comments) => {
   });
   localRealm.close();
   return comments;
+}
+
+export const getMessages = async (conversationID, setMessages) => {
+  console.log("this is a test");
+  const configuration = {
+    schema: [Message],
+    sync: {
+      user: app.currentUser, // loggedIn User
+      partitionValue: `${conversationID}`, // should be userId(Unique) so it can manage particular user related documents in DB by userId
+    }
+  }
+  const localRealm = await Realm.open(configuration).then((realm) => {
+    const messages = realm.objects('messages');
+    //console.log(messages);
+    setMessages(messages);
+    try{
+      messages.addListener(() => {
+        setMessages(messages);
+      })
+    }catch (error) {
+      console.warn(`unable to add listener: ${error}`);
+    }
+    return (() => {realm.close()})
+  });
+
+}
+
+export const updateConversation = async (realm, conversationID) => {
+  const convo = realm.objectForPrimaryKey('conversations', conversationID);
+  if(convo.unread > 0){
+      realm.write(() => {
+          console.log('working');
+          const converationToUpdate = realm.objectForPrimaryKey('conversations', conversationID);
+          converationToUpdate.unread = 0;
+        });
+  }
 }
 
 /*

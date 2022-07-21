@@ -25,9 +25,21 @@ export const Conversation = {
         lastMessage: "string",
         lastMessageFrom: "string",
         lastMessageTimestamp: "string",
-        conversationID: 'string'
     },
     primaryKey: '_id'
+}
+
+export const Message = {
+    name: 'messages',
+    properties: {
+        _id: "objectId",
+        _partition: "string",
+        message: "string",
+        to: "string",
+        from: "string",
+        timestamp: "string"
+    },
+    primaryKey: "_id"
 }
 
 /*

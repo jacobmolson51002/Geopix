@@ -1,12 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Text, View, Button, TextInput, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { logUserOut } from '../backend/database';
+import { getMessages, updateConversation } from '../backend/realm';
 import { useSelector } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export const Message = ({ navigation, route }) => {
-    const { recipient } = route.params;
+    const { conversationID } = route.params;
     const [message, setMessage] = useState("");
+    const [messages, setMessages] = useState([]);
+    const [userID, setUserID] = useState('');
+    const realmRedux = useSelector(state => state.userReducer);
+    const realm = realmRedux.userRealm;
+
+    updateConversation(realm, conversationID);
+
+    getMessages(conversationID, setMessages);
+    
+
+    //updateConversation(realm, conversationID);
+    useEffect(() => {
+        (async () => {
+            const user = await AsyncStorage.getItem('userID');
+            setUserID(user);
+        })()
+    })
+    
 
     const styles = {
         wrapper: {
@@ -28,6 +48,7 @@ export const Message = ({ navigation, route }) => {
         },
         messages: {
             height: '80%',
+            display: 'flex',
         },
         inputView: {
             display: 'flex',
@@ -48,6 +69,11 @@ export const Message = ({ navigation, route }) => {
             margin: 20,
             fontSize: 16
         },
+        messagesView: {
+            flex: 1,
+            display: 'flex',
+            alignItems: 'flex-end'
+        },
         buttonContainer: {
             width: '15%',
             display: 'flex',
@@ -63,13 +89,85 @@ export const Message = ({ navigation, route }) => {
         console.log("sent message");
     }
 
+    const MyMessage = (message) => {
+        const styles = {
+            messageWrapper: {
+                width: '100%',
+                display: 'flex',
+                alignItems: 'flex-end'
+            },
+            textBubble: {
+                maxWidth: '60%',
+                flexWrap: 'wrap',
+                display: 'flex',
+                padding: 15,
+                fontSize: 15,
+                color: 'white',
+                backgroundColor: 'turquoise',
+                borderRadius: 25,
+                marginRight: 10,
+                justifyContent: 'flex-end'
+            }
+        }
+        return(
+            <View style={styles.messageWrapper}>
+                <View style={styles.textBubble}>
+                    <Text>
+                        {message.message}
+                    </Text>
+                </View>
+            </View>
+        )
+    }
+
+    const RecipientMessage = (message) => {
+        const styles = {
+            messageWrapper: {
+                width: '100%',
+                display: 'flex',
+                alignItems: 'flex-start'
+            },
+            textBubble: {
+                maxWidth: '60%',
+                flexWrap: 'wrap',
+                display: 'flex',
+                padding: 15,
+                fontSize: 15,
+                color: '#bebebe',
+                backgroundColor: 'gray',
+                borderRadius: 25,
+                marginLeft: 10,
+            }
+        }
+        return(
+            <View style={styles.messageWrapper}>
+                <View style={styles.textBubble}>
+                    <Text>
+                        {message.message}
+                    </Text>
+                </View>
+            </View>
+        )
+    }
+
     return(
         <View style={styles.wrapper}>
             <View style={styles.topBar}>
-                <Text style={styles.username}>{recipient.username}</Text>
+                <Text style={styles.username}>Test</Text>
             </View>
             <ScrollView style={styles.messages}>
+                <View style={styles.messagesView}>
+                    {messages.map((message, index) => {
+                        return(
+                            message.to === userID ? (
+                                <RecipientMessage key={index} message={message.message} />
+                            ) : (
+                                <MyMessage key={index} message={message.message} />
+                            )
 
+                        )
+                    })}
+                </View>
             </ScrollView>
             <KeyboardAvoidingView behavior={'padding'}>
                 <View style={styles.inputView}>
