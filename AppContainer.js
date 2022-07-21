@@ -7,6 +7,7 @@ import {SYNC_CONFIG} from './sync.config';
 import { AppHome } from './views/AppHome';
 import { CameraView } from './views/CameraView';
 import { Login } from './views/Login';
+import { Message } from './views/Message';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
@@ -36,6 +37,7 @@ export const AppContainer = () => {
         <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="AppHome" >
             <Stack.Screen name="AppHome" component={AppHome} />
             <Stack.Screen name="Camera" component={CameraView} />
+            <Stack.Screen name="Message" component={Message} />
         </Stack.Navigator>
     ) : (
         <AppLoading />
