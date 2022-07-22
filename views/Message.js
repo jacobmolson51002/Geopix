@@ -2,24 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { Text, View, Button, TextInput, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { logUserOut } from '../backend/database';
 import { getMessages, updateConversation } from '../backend/realm';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export const Message = ({ navigation, route }) => {
     const { conversationID } = route.params;
     const [message, setMessage] = useState("");
-    const [messages, setMessages] = useState(null);
     const [userID, setUserID] = useState('');
-    const realmRedux = useSelector(state => state.userReducer);
-    const realm = realmRedux.userRealm;
+    const [getData, setGetData] = useState(true);
+    const userRedux = useSelector(state => state.userReducer);
+    const messages = userRedux.currentConversation;
+    const realm = userRedux.userRealm;
+    const dispatch = useDispatch();
 
     console.log('test');
     if(messages == null){
         updateConversation(realm, conversationID);
-
-        getMessages(conversationID, setMessages);
+        
+        getMessages(conversationID, dispatch);
     }
+
     
 
     //updateConversation(realm, conversationID);

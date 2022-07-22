@@ -614,7 +614,7 @@ export const getUserInformation = async (username) => {
   return userInformation
 }
 
-export const updateRecipientConversation = async(message, userID, lastMessageTimestamp, conversationID, recipient){
+export const updateRecipientConversation = async (message, userID, lastMessageTimestamp, conversationID, recipient) => {
   const users = mongodb.db('users').collection('conversations');
   const findConvo = await users.findOne({_id: conversationID, _partition: recipient});
   if(findConvo != null){
@@ -622,4 +622,4 @@ export const updateRecipientConversation = async(message, userID, lastMessageTim
   }else{
     await users.insertOne({_partition: userID, lastMessage: message, lastMessageFrom: userID, lastMessageTimestamp: lastMessageTimestamp, unread: 1});
   }
-}
+};

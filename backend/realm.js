@@ -8,7 +8,7 @@ import { setLocation } from './location';
 import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as Location from 'expo-location';
-import { setCurrentLocation, setMessageData, setUnreadCount, setUserRealm } from '../redux/actions';
+import { setCurrentLocation, setMessageData, setUnreadCount, setUserRealm, setCurrentConversation } from '../redux/actions';
 import {ObjectId} from 'bson';
 import { updateRecipientConversation } from './database';
 
@@ -44,11 +44,16 @@ const sortByTime = (conversations) => {
 
 export const openUserRealm = async (dispatch) => {
   console.log(app.currentUser.id);
+  const OpenRealmBehaviorConfiguration = {
+    type: "openImmediately",
+  }
   const configuration = {
     schema: [userSchema, Conversation],// add multiple schemas, comma seperated.
     sync: {
       user: app.currentUser, // loggedIn User
-      partitionValue: `${app.currentUser.id}`, // should be userId(Unique) so it can manage particular user related documents in DB by userId
+      partitionValue: `${app.currentUser.id}`,
+      newRealmFileBehavior: OpenRealmBehaviorConfiguration,
+      existingRealmFileBehavior: OpenRealmBehaviorConfiguration, // should be userId(Unique) so it can manage particular user related documents in DB by userId
     }
   };
   //const userRealm = await Realm.open(configuration);
@@ -217,22 +222,28 @@ export const getViewedComments = async (comments) => {
   return comments;
 }
 
-export const getMessages = async (conversationID, setMessages) => {
+export const getMessages = async (conversationID, dispatch) => {
   console.log('ran');
+  const OpenRealmBehaviorConfiguration = {
+    type: "openImmediately",
+  }
   const configuration = {
     schema: [Message],
     sync: {
       user: app.currentUser, // loggedIn User
-      partitionValue: `${conversationID}`, // should be userId(Unique) so it can manage particular user related documents in DB by userId
+      partitionValue: `${conversationID}`,
+      newRealmFileBehavior: OpenRealmBehaviorConfiguration,
+      existingRealmFileBehavior: OpenRealmBehaviorConfiguration, // should be userId(Unique) so it can manage particular user related documents in DB by userId
     }
   }
   const localRealm = await Realm.open(configuration).then((realm) => {
     const messages = realm.objects('messages');
     //console.log(messages);
-    setMessages(messages);
+    dispatch(setCurrentConversation(messages));
     try{
-      messages.addListener(() => {
-        setMessages(messages);
+      messages.addListener((newMessages) => {
+        console.log(newMessages);
+        dispatch(setCurrentConversation(newMessages));
       })
     }catch (error) {
       console.warn(`unable to add listener: ${error}`);
