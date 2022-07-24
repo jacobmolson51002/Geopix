@@ -9,6 +9,7 @@ export const UPDATE_GEOPIC = 'UPDATE_GEOPIC';
 export const SET_MESSAGE_DATA = 'SET_MESSAGE_DATA';
 export const SET_UNREAD_COUNT = 'SET_UNREAD_COUNT';
 export const SET_USER_REALM = 'SET_USER_REALM';
+export const SET_MESSAGES_REALM = 'SET_MESSAGES_REALM';
 export const SET_CURRENT_CONVERSATION = 'SET_CURRENT_CONVERSATION';
 
 export const setMessageData = messageData => dispatch => {
@@ -78,6 +79,13 @@ export const setUserRealm = userRealm => dispatch => {
     dispatch({
         type: SET_USER_REALM,
         payload: userRealm
+    })
+}
+
+export const setMessagesRealm = messageRealm => dispatch => {
+    dispatch({
+        type: SET_MESSAGES_REALM,
+        payload: messageRealm
     })
 }
 

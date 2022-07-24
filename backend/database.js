@@ -10,6 +10,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as Location from 'expo-location';
 import { setCurrentLocation } from '../redux/actions';
 import { app, getViewedGeopicsList } from './realm';
+import {ObjectId} from 'bson';
 
 //export const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
 
@@ -388,7 +389,7 @@ export const geopicUploadMongo = async (queryString, dispatch, dispatchData, url
   //console.log(upload);
 }
 
-export const geopicUpload = async (geopicInfo, location, dispatch, dispatchData) => {
+export const geopicUpload = async (geopicInfo, userReducer, dispatch, dispatchData) => {
 
       //get current time
       let currentTime = new Date();
@@ -435,21 +436,21 @@ export const geopicUpload = async (geopicInfo, location, dispatch, dispatchData)
 
       console.log(currentTime);
 
-
+      const username = await AsyncStorage.getItem('username');
       //create the geopic object to store in the database
       const geopic = {
         'clusterID': '',
         'pic': result,
         'caption': geopicInfo.caption,
         'userID': userID,
-        'username': 'jacobmolson',
+        'username': username,
         'votes': [0,0,0],
         'flags': [],
         'hidden': false,
         'comments': 0,
         'location': {
           'type': 'Point',
-          'coordinates': [location.currentLocation.longitude, location.currentLocation.latitude]
+          'coordinates': [userReducer.currentLocation.longitude, userReducer.currentLocation.latitude]
         },
         'timestamp': `${currentTime}`,
         'views': 0,
@@ -457,7 +458,7 @@ export const geopicUpload = async (geopicInfo, location, dispatch, dispatchData)
         '_partition': 'geopics'
       }
 
-      geopicUploadMongo(geopic, dispatch, dispatchData, geopicInfo.url, location);
+      geopicUploadMongo(geopic, dispatch, dispatchData, geopicInfo.url, userReducer);
       
       //call mongo to upload to the databse
 }
@@ -588,15 +589,21 @@ export const greaterThan3Days = (timestamp) => {
   }
 }
 
-export const getUserInformation = async (username) => {
+export const getUser = async (userID) => {
+  const users = mongodb.db('users').collection('info');
+  const userInfo = await users.findOne({_partition: userID});
+  return userInfo
+}
+
+export const getUserInformation = async (userID) => {
   let userInformation = {};
   const users = mongodb.db('users').collection('info');
   const geopics = mongodb.db('geopics').collection('public');
   const comments = mongodb.db('geopics').collection('comments');
 
-  const userInfo = await users.findOne({username: username});
-  const userGeopics = await geopics.find({username: username});
-  const userComments = await comments.find({username: username});
+  const userInfo = await users.findOne({_partition: userID});
+  const userGeopics = await geopics.find({userID: userID});
+  const userComments = await comments.find({userID: userID});
   let contentArray = await userGeopics.concat(userComments);
   contentArray.sort((a, b) => {
     const aTime = new Date(a.timestamp);
@@ -611,15 +618,40 @@ export const getUserInformation = async (username) => {
   });
   userInformation.geocash = await userInfo.geocash;
   userInformation.content = await contentArray;
+  userInformation.username = await userInfo.username;
   return userInformation
 }
 
-export const updateRecipientConversation = async (message, userID, lastMessageTimestamp, conversationID, recipient) => {
+export const updateRecipientConversation = async (message, userID, lastMessageTimestamp, conversationID, recipients) => {
+  console.log(conversationID);
   const users = mongodb.db('users').collection('conversations');
-  const findConvo = await users.findOne({_id: conversationID, _partition: recipient});
-  if(findConvo != null){
-    await users.updateOne({_id: conversationID, _partition: recipient}, {$set: {lastMessage: message, lastMessageFrom: userID, lastMessageTimestamp: lastMessageTimestamp, unread: findOne.unread+1}});
-  }else{
-    await users.insertOne({_partition: userID, lastMessage: message, lastMessageFrom: userID, lastMessageTimestamp: lastMessageTimestamp, unread: 1});
-  }
+  if(recipients.length == 1){
+    const findConvo = await users.findOne({conversationID: conversationID, _partition: recipients[0]});
+    if(findConvo != null){
+      await users.updateOne({conversationID: `${conversationID}`, _partition: recipients[0]}, {$set: {lastMessage: message, lastMessageFrom: userID, lastMessageTimestamp: `${lastMessageTimestamp}`, unread: findConvo.unread+1}});
+    }else{
+      await users.insertOne({_id: new ObjectId(), conversationID: `${conversationID}`, _partition: recipients[0], lastMessage: message, lastMessageFrom: userID, lastMessageTimestamp: `${lastMessageTimestamp}`, unread: 1, recipients: [userID]});
+    }
+  } //else: send to every recipient in the list
+
 };
+
+export const sendPushNotification = async (expoPushToken) => {
+  const message = {
+    to: expoPushToken,
+    sound: 'default',
+    title: 'Original Title',
+    body: 'And here is the body!',
+    data: { someData: 'goes here' },
+  };
+
+  await fetch('https://exp.host/--/api/v2/push/send', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Accept-encoding': 'gzip, deflate',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(message),
+  });
+}

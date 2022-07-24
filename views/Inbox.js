@@ -1,19 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Text, View, Button, TextInput, ScrollView, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
 import { logUserOut } from '../backend/realm';
+import { getUser } from '../backend/database';
 import { useSelector } from 'react-redux';
 
 
 export const Inbox = ({ navigation, route }) => {
 
     const conversationsReducer = useSelector(state => state.userReducer);
-    const conversations = conversationsReducer.messages;
-
-    console.log(conversations);
-
-    const viewConversation = (conversationID) => {
-        
-    }
+    let conversations = conversationsReducer.conversations;
     
     const styles = {
         wrapper: {
@@ -71,13 +66,18 @@ export const Inbox = ({ navigation, route }) => {
         }
     }
 
-    return(
+    const usernameDisplay = async (userID) => {
+        const user = await getUser(userID);
+        return user.username;
+    }
+
+    return (
         <View style={styles.wrapper}>
             <Text style={styles.messagesHeader}>Messages</Text>
             <ScrollView style={styles.conversationsList}>
                 {conversations.map((conversation, index) => {
                     return(
-                        <TouchableOpacity key={index} onPress={() => {navigation.navigate('Message', {conversationID: conversation._id});}} style={styles.conversation}>
+                        <TouchableOpacity key={index} onPress={() => {navigation.navigate('Message', {conversationID: conversation.conversationID, conversationPrimaryID: conversation._id, recipients: conversation.recipients, newConversation: false});}} style={styles.conversation}>
                             <Text style={styles.recipient}>{conversation.recipients[0]}</Text>
                             <Text style={conversation.unread > 0 ? styles.newMessage : styles.lastMessage}>{conversation.lastMessage}</Text>
                             {conversation.unread > 0 ? (

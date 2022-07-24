@@ -20,7 +20,7 @@ export const Login = ({ navigation }) => {
 
     const loginHandler = async () => {
 
-        const login = await logUserIn(email, password);
+        const login = await logUserIn(email, password, false, dispatch);
         if(login === "successful login") {
             console.log("success");
             navigation.navigate("AppContainer");
@@ -34,11 +34,11 @@ export const Login = ({ navigation }) => {
         if(password === confirmPassword){
             console.log(email);
             console.log(password);
-            const register = await registerUser(email, password);
+            const register = await registerUser(email, password, dispatch);
             if(register === "successful register") {
                 console.log("success");
                 setCreateAccountShowing(true);
-                //go to home page
+                navigation.navigate("AppContainer");
             } else {
                 console.log(register.message);
             }

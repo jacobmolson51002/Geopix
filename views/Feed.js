@@ -15,7 +15,6 @@ export const Feed = ({ navigation, sheetRef, setCurrentGeopic, setComments }) =>
       <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="feed" >
         <Stack.Screen name="feed" children={() => <FeedView setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} data={data} />} />
         <Stack.Screen name='viewProfile' component={ProfileView} /> 
-        <Stack.Screen name='message' component={Message} />
       </Stack.Navigator>
     )
 }

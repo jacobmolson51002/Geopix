@@ -1,6 +1,6 @@
 import 'expo-dev-client';
 import 'react-native-get-random-values';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { View } from 'react-native';
 import {registerRootComponent} from 'expo'
 import {AppWrapperNonSync} from './app/AppWrapperNonSync';
@@ -19,11 +19,26 @@ import AppLoading from 'expo-app-loading';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { getGeopics } from './backend/database';
+import { getGeopics, sendPushNotification } from './backend/database';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import Constants from "expo-constants";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 const App = () => {
-
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const [notification, setNotification] = useState(false);
+  const notificationListener = useRef();
+  const responseListener = useRef();
   const [initialRoute, setInitialRoute] = useState(null);
+  const [loggedInFirst, setLoggedInFirst] = useState(false);
   const Stack = createNativeStackNavigator();
 
 
@@ -42,6 +57,7 @@ const App = () => {
 
         if(loginCredentials !== null){
           setInitialRoute("AppContainer");
+          setLoggedInFirst(true);
           
           //navigationRef.navigate("Home");
           //userLoggedIn = true;
@@ -55,6 +71,22 @@ const App = () => {
       } 
     }
     preScreen();
+    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+
+    // This listener is fired whenever a notification is received while the app is foregrounded
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      setNotification(notification);
+    });
+
+    // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener.current);
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
   }, []);
 
   /*const onLayoutRootView = useCallback(async () => {
@@ -69,7 +101,7 @@ const App = () => {
         <View style={{ flex: 1 }} >
             <NavigationContainer independent={true}>
                 <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }} mode="modal">
-                    <Stack.Screen name="AppContainer" component={AppContainer} />
+                    <Stack.Screen name="AppContainer" children={() => <AppContainer loggedInFirst={loggedInFirst} /> } />
                     <Stack.Screen name="Login" component={Login} />
                 </Stack.Navigator>
                 <StatusBar />
@@ -80,4 +112,38 @@ const App = () => {
     <AppLoading />
   )
 }
+
+async function registerForPushNotificationsAsync() {
+  const experienceId = '@geopix/Geopix';
+  let token;
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync({experienceId})).data;
+    console.log(token);
+  } else {
+    alert('Must use physical device for Push Notifications');
+  }
+
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
+  return token;
+}
+
+
 registerRootComponent(App);

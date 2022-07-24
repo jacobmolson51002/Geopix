@@ -9,6 +9,7 @@ import { Provider } from  'react-redux';
 import { Store } from '../redux/store';
 import { useSelector } from 'react-redux';
 import { CameraView } from './CameraView';
+import { ProfileView } from './ProfileView';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AppLoading from 'expo-app-loading';
@@ -103,11 +104,11 @@ const DisplayMap = ({ sheetRef, setCurrentGeopic, setComments }) => {
               {geopics.geopics != null ? geopics.geopics.map((geopic, index) => {
                 //console.log(geopic.location.coordinates[0]);
                 if(geopic.hidden === false && geopic.clustered === false && greaterThan3Days(geopic) === false && geopic.viewed === false){
-                  return <Marker centerOffset={{x: 0, y: -20}} onPress={() => {navigation.navigate('singleView', {  geopic: geopic, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} >
+                  return <Marker centerOffset={{x: 0, y: -20}} onPress={() => {navigation.navigate('singleView', {  navigation: navigation, geopic: geopic, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} >
                             <Image source={require('./mapPin.png')} style={{ width: 15, height: 40 }}/>
                         </Marker>
                 }else if(geopic.viewed) {
-                  return <Marker centerOffset={{x: 0, y: -20}} onPress={() => {navigation.navigate('singleView', {  geopic: geopic, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} >
+                  return <Marker centerOffset={{x: 0, y: -20}} onPress={() => {navigation.navigate('singleView', {  navigation: navigation, geopic: geopic, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} >
                           <Image source={require('./mapPin.png')} style={{ width: 15, height: 40 }}/>
                         </Marker>
                 }
@@ -137,11 +138,13 @@ const DisplayMap = ({ sheetRef, setCurrentGeopic, setComments }) => {
 
 export const Map = ({ sheetRef, setCurrentGeopic, setComments }) => {
   const Stack = createNativeStackNavigator();
+  const navigation = useNavigation();
   return (
     <Stack.Navigator screenOptions={{ animation: 'none', headerShown: false }} initialRouteName="displayMap" >
       <Stack.Screen name="displayMap" children={() => <DisplayMap setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef}/>} />
       <Stack.Screen name="singleView" component={SingleFeedView} />
       <Stack.Screen name="scrollView" component={ClusterFeedView} />
+      <Stack.Screen name='viewProfile' component={ProfileView} />
       {/*<Stack.Screen name="singleView" children={() => <SingleFeedView setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} />} />*/}
       {/*<Stack.Screen name="scrollView" children={() => <ClusterFeedView setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} />} />*/}
     </Stack.Navigator> 

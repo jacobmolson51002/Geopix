@@ -8,9 +8,9 @@ import { setLocation } from './location';
 import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as Location from 'expo-location';
-import { setCurrentLocation, setMessageData, setUnreadCount, setUserRealm, setCurrentConversation } from '../redux/actions';
+import { setCurrentLocation, setMessageData, setUnreadCount, setUserRealm, setCurrentConversation, setMessagesRealm } from '../redux/actions';
 import {ObjectId} from 'bson';
-import { updateRecipientConversation } from './database';
+import { updateRecipientConversation, getUser } from './database';
 
 //initialize realm app
 export const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
@@ -42,7 +42,7 @@ const sortByTime = (conversations) => {
   return SortedConversations;
 }
 
-export const openUserRealm = async (dispatch) => {
+export const openUserRealm = async (dispatch, newUser, logUsername) => {
   console.log(app.currentUser.id);
   const OpenRealmBehaviorConfiguration = {
     type: "openImmediately",
@@ -60,8 +60,32 @@ export const openUserRealm = async (dispatch) => {
   const userRealm = await Realm.open(configuration).then(async (realm) => {
     dispatch(setUserRealm(realm));
 
+    if(newUser){
+      const randomNum = Math.floor(Math.random() * 10000);
+      const username = `user ${randomNum}`;
+      realm.write(async () => {
+        realm.create('info', {
+          _id: new ObjectId(),
+          _partition: app.currentUser.id,
+          geocash: 0,
+          username: username,
+          phoneNumber: 3147360833
+        });
+      });
+      await AsyncStorage.setItem('username', username);
+    }else{
+      if(logUsername){
+        const userID = await AsyncStorage.getItem('userID');
+        user = await getUser(userID);
+        console.log(user);
+        await AsyncStorage.setItem('username', user.username);
+      }
 
-    const conversations = await realm.objects('conversations')
+    }
+
+    const conversations = await realm.objects('conversations');
+
+
 
     //let sortedConversations = await sortByTime(conversations);
 
@@ -77,7 +101,6 @@ export const openUserRealm = async (dispatch) => {
 
     try{
       conversations.addListener(() => {
-        console.log(conversations);
         dispatch(setMessageData(conversations));
 
         let unreadCount = 0;
@@ -95,7 +118,7 @@ export const openUserRealm = async (dispatch) => {
 }
 
 //function to login the user
-export const logUserIn = async (email, password) => {
+export const logUserIn = async (email, password, newUser, dispatch) => {
       //const dispatch = useDispatch();
       //login the user
       //const credentials = await Realm.Credentials.emailPassword("jacobmolson");
@@ -105,9 +128,8 @@ export const logUserIn = async (email, password) => {
       );
       try {
         const loggedInUser = await app.logIn(credentials);
-        await AsyncStorage.setItem('userID', loggedInUser.id);
-        await AsyncStorage.setItem('email', email);
-        await AsyncStorage.setItem('password', password);
+        await AsyncStorage.setItem('userID', loggedInUser.id)
+        openUserRealm(dispatch, newUser, true);
         return (
           "successful login"
         );
@@ -132,11 +154,11 @@ export const logUserOut = async () => {
     await AsyncStorage.removeItem('password');
 }
 
-export const registerUser = async (email, password) => {
+export const registerUser = async (email, password, dispatch) => {
     try {
       const registeredUser = await app.emailPasswordAuth.registerUser({ email, password });
 
-      logUserIn(email, password);
+      logUserIn(email, password, true, dispatch);
       return (
         "successful register"
       );
@@ -237,6 +259,7 @@ export const getMessages = async (conversationID, dispatch) => {
     }
   }
   const localRealm = await Realm.open(configuration).then((realm) => {
+    dispatch(setMessagesRealm(realm));
     const messages = realm.objects('messages');
     //console.log(messages);
     dispatch(setCurrentConversation(messages));
@@ -253,33 +276,90 @@ export const getMessages = async (conversationID, dispatch) => {
 
 }
 
+export const sendNewMessage = async (conversationID, timestamp, dispatch, message, messagesRealm, userRealm, userID, recipients) => {
+  console.log(conversationID);
+  const configuration = {
+    schema: [Message],
+    sync: {
+      user: app.currentUser, // loggedIn User
+      partitionValue: `${conversationID}`, // should be userId(Unique) so it can manage particular user related documents in DB by userId
+    }
+  }
+  const localRealm = await Realm.open(configuration).then((realm) => {
+    dispatch(setMessagesRealm(realm));
+    const messages = realm.objects('messages');
+    realm.write(() => {
+      realm.create('messages', {
+        _id: new ObjectId(),
+        _partition: `${conversationID}`,
+        message: message,
+        to: "",
+        from: userID,
+        timestamp: `${timestamp}`
+      });
+    });
+
+    try{
+      messages.addListener((newMessages) => {
+        console.log(newMessages);
+        dispatch(setCurrentConversation(newMessages));
+      })
+    }catch (error) {
+      console.warn(`unable to add listener: ${error}`);
+    }
+    return (() => {realm.close()})
+  });
+  updateRecipientConversation(message, userID, timestamp, conversationID, recipients);
+
+}
+
+export const createNewConversation = async (conversationID, timestamp, userRealm, recipients, message, userID) => {
+  userRealm.write(() => {
+    userRealm.create('conversations', {
+      _id: new ObjectId(),
+      _partition: `${userID}`,
+      conversationID: `${conversationID}`,
+      unread: 0,
+      recipients: recipients,
+      lastMessage: message,
+      lastMessageFrom: `${userID}`,
+      lastMessageTimestamp: `${timestamp}`,
+    });
+  });
+}
+
 export const updateConversation = async (realm, conversationID) => {
-  const convo = realm.objectForPrimaryKey('conversations', conversationID);
-  if(convo.unread > 0){
+  if(conversationID != null){
+    const convo = await realm.objectForPrimaryKey('conversations', conversationID);
+    if(convo.unread > 0){
       realm.write(() => {
           console.log('working');
-          const converationToUpdate = realm.objectForPrimaryKey('conversations', conversationID);
-          converationToUpdate.unread = 0;
+          convo.unread = 0;
         });
+    }
   }
 }
 
-export const sendMessage = (message, realm, conversationID, userID) => {
+export const sendMessage = (message, realm, userRealm, conversationID, conversationPrimaryID, userID, recipients) => {
+  console.log('registered');
   const messageTimeStamp = new Date();
   realm.write(() => {
     realm.create('messages', {
-      _partition: conversationID,
+      _id: new ObjectId(),
+      _partition: `${conversationID}`,
       message: message,
       to: "",
       from: userID,
-      timestamp: messageTimeStamp
+      timestamp: `${messageTimeStamp}`
     });
-    let currentConversation = realm.objectForPrimaryKey('conversations', conversationID);
+  });
+  userRealm.write(() => {
+    let currentConversation = userRealm.objectForPrimaryKey('conversations', conversationPrimaryID);
     currentConversation.lastMessage = message;
     currentConversation.lastMessageFrom = userID;
-    currentConversation.timestamp = messageTimeStamp;
+    currentConversation.lastMessageTimestamp = `${messageTimeStamp}`;
   })
-  updateRecipientConversation(message, userID, lastMessageTimestamp, conversationID);
+  updateRecipientConversation(message, userID, messageTimeStamp, conversationID, recipients);
 }
 
 /*

@@ -17,6 +17,7 @@ export const Conversation = {
     properties: {
         _id: "objectId",
         _partition: "string",
+        conversationID: "string",
         unread: "int",
         recipients: {
             type: 'list',

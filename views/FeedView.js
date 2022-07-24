@@ -261,8 +261,8 @@ class SingleView extends React.PureComponent {
 
         }
 
-        const profile = (username) => {
-            navigation.navigate('viewProfile', { username: username });
+        const profile = (userID) => {
+            navigation.navigate('viewProfile', { userID: userID });
         };
 
         return (
@@ -272,7 +272,7 @@ class SingleView extends React.PureComponent {
                 </DoubleTapButton>
                 <View style={styles.bottomBox} >
                     <View  style={styles.captionBox}>
-                        <Text style={styles.geopicInfo}><TouchableOpacity style={{ margin: 0,padding: 0 }}onPress={() => {profile(geopic.username)}}><Text style={styles.geopicInfo}>{geopic.username}</Text></TouchableOpacity>   •   <Text style={{ fontWeight: 'bold', fontSize: 12, color: "white" }}>{Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}</Text></Text>
+                        <Text style={styles.geopicInfo}><TouchableOpacity style={{ margin: 0,padding: 0 }}onPress={() => {profile(geopic.userID)}}><Text style={styles.geopicInfo}>{geopic.username}</Text></TouchableOpacity>   •   <Text style={{ fontWeight: 'bold', fontSize: 12, color: "white" }}>{Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}</Text></Text>
                         <View style={styles.captionTextBox} ><Text style={styles.captionText}>{geopic.caption}</Text></View>
                         <TouchableOpacity onPress={() => {viewComments()}} ><Text style={styles.viewCommentsButton}>{geopic.comments} {geopic.comments === 1 ? "comment" : "comments"}</Text></TouchableOpacity>
                     </View>
@@ -292,7 +292,7 @@ export const SingleFeedView = ({ route, navigation }) => {
 
     const geopicView = [geopic];
 
-    const renderItem = ({ item }) => <SingleView setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />;
+    const renderItem = ({ item }) => <SingleView navigation={navigation} setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />;
     return (
         <View style={{ flex:  1, backgroundColor: '#222222' }}>
             <FlatList data={geopicView} renderItem={renderItem} keyExtractor={geopic => geopic._id} />

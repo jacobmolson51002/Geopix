@@ -17,7 +17,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { openUserRealm } from './backend/realm';
 
 
-export const AppContainer = () => {
+export const AppContainer = ({ loggedInFirst }) => {
 
     const geopics = useSelector(state => state.geopicsReducer);
     const [userInfoReady, setUserInfoReady] = useState(false);
@@ -27,8 +27,12 @@ export const AppContainer = () => {
 
     useEffect(() => {
         (async () => {
-            await openUserRealm(dispatch);
-            setUserInfoReady(true);
+            if(loggedInFirst == false){
+                console.log('opening realm');
+                await openUserRealm(dispatch, false, false);
+                setUserInfoReady(true);
+            }
+
         })();
     })
 

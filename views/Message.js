@@ -1,24 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { Text, View, Button, TextInput, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { logUserOut } from '../backend/database';
-import { getMessages, updateConversation } from '../backend/realm';
+import { getMessages, updateConversation, sendMessage, createNewConversation, sendNewMessage } from '../backend/realm';
 import { useSelector, useDispatch } from 'react-redux';
+import { setCurrentConversation } from '../redux/actions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {ObjectId} from 'bson';
 
 
 export const Message = ({ navigation, route }) => {
-    const { conversationID } = route.params;
+    let { conversationID, conversationPrimaryID, recipients, newConversation } = route.params;
     const [message, setMessage] = useState("");
     const [userID, setUserID] = useState('');
     const [getData, setGetData] = useState(true);
+    const [firstMessageNew, setFirstMessageNew] = useState(newConversation);
     const userRedux = useSelector(state => state.userReducer);
     const messages = userRedux.currentConversation;
-    const realm = userRedux.userRealm;
+    const userRealm = userRedux.userRealm;
+    const messagesRealm = userRedux.messagesRealm;
     const dispatch = useDispatch();
 
     console.log('test');
-    if(messages == null){
-        updateConversation(realm, conversationID);
+    console.log(newConversation);
+    updateConversation(userRealm, conversationPrimaryID);
+
+
+    if(messages == null && newConversation === false){
+        console.log('working');
         
         getMessages(conversationID, dispatch);
     }
@@ -91,14 +99,29 @@ export const Message = ({ navigation, route }) => {
         }
     }
 
-    const sendMessage = () => {
+    const sendMessageClicked = async () => {
         let newMessages = [];
-        messages.map((currentMessage) => {
-            newMessages.push(currentMessage);
-        });
-        newMessages.push({message: message, from: userID});
-        setMessages(newMessages)
-        //sendMessage(message, realm, conversationID, userID);
+        if(firstMessageNew === false){
+            console.log('false');
+            messages.map((currentMessage) => {
+                newMessages.push(currentMessage);
+            });
+            newMessages.push({message: message, from: userID});
+            dispatch(setCurrentConversation(newMessages));
+            sendMessage(message, messagesRealm, userRealm, conversationID, conversationPrimaryID, userID, recipients);
+        }else{
+            console.log('true');
+            newMessages.push({message: message, from: userID});
+            newConversation = false;
+            dispatch(setCurrentConversation(newMessages));
+
+            const newConversationID = new ObjectId();
+            const timestamp = new Date();
+            createNewConversation(newConversationID, timestamp, userRealm, recipients, message, userID);
+            sendNewMessage(newConversationID, timestamp, dispatch, message, messagesRealm, userRealm, userID, recipients);
+            setFirstMessageNew(false);
+
+        }
     }
 
     const MyMessage = (message) => {
@@ -112,12 +135,15 @@ export const Message = ({ navigation, route }) => {
                 maxWidth: '60%',
                 flexWrap: 'wrap',
                 display: 'flex',
-                padding: 15,
+                paddingLeft: 15,
+                paddingRight: 15,
+                paddingTop: 12,
+                paddingBottom: 12,
                 fontSize: 15,
                 color: 'white',
                 backgroundColor: 'turquoise',
                 borderRadius: 25,
-                marginRight: 10,
+                marginRight: 5,
                 marginTop: 1,
                 justifyContent: 'flex-end'
             }
@@ -145,12 +171,15 @@ export const Message = ({ navigation, route }) => {
                 flexWrap: 'wrap',
                 display: 'flex',
                 flex: 1,
-                padding: 15,
+                paddingLeft: 15,
+                paddingRight: 15,
+                paddingTop: 12,
+                paddingBottom: 12,
                 fontSize: 15,
                 color: '#bebebe',
                 backgroundColor: 'gray',
                 borderRadius: 25,
-                marginLeft: 10,
+                marginLeft: 5,
                 marginTop: 1,
             }
         }
@@ -170,15 +199,18 @@ export const Message = ({ navigation, route }) => {
             <View style={styles.topBar}>
                 <Text style={styles.username}>Test</Text>
             </View>
-            <ScrollView style={styles.messages}>
+            <ScrollView 
+            ref={ref => {this.scrollView = ref}}
+            onContentSizeChange={() => this.scrollView.scrollToEnd({animated: true})}
+            style={styles.messages}>
                 {messages != null ? (
                 <View style={styles.messagesView}>
                     {messages.map((message, index) => {
                         return(
-                            message.to === userID ? (
-                                <RecipientMessage key={index} message={message.message} />
-                            ) : (
+                            message.from == userID ? (
                                 <MyMessage key={index} message={message.message} />
+                            ) : (
+                                <RecipientMessage key={index} message={message.message} />
                             )
 
                         )
@@ -192,7 +224,7 @@ export const Message = ({ navigation, route }) => {
                 <View style={styles.inputView}>
                     <TextInput returnKeyType="send" keyboardAppearance='dark' placeholderTextColor="#bebebe" multiline={true} defaultValue={message} onChangeText={newText => setMessage(newText)} placeholder={"Send message"} style={styles.message}/>
                     <View style={styles.buttonContainer}>
-                        <Button style={styles.sendMessage} title="Send" onPress={sendMessage} />
+                        <Button style={styles.sendMessage} title="Send" onPress={sendMessageClicked} />
                     </View>
                 </View>
             </KeyboardAvoidingView>
