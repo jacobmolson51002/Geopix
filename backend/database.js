@@ -669,3 +669,13 @@ export const sendVerificationText = async (number) => {
   const verificationCode = await code.json();
   return verificationCode;
 }
+
+export const checkUsername = async (username) => {
+  const users = mongodb.db('users').collection('info');
+  const check = await users.findOne({username: username});
+  if(check === null){
+    return true
+  }else{
+    return false
+  }
+}
