@@ -655,3 +655,17 @@ export const sendPushNotification = async (expoPushToken) => {
     body: JSON.stringify(message),
   });
 }
+
+export const sendVerificationText = async (number) => {
+
+  const code = await fetch('https://geopix-295e8.web.app/', {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      'Accept-encoding': 'gzip, deflate',
+      'Content-Type': 'application/json',
+    },
+  });
+  const verificationCode = await code.json();
+  return verificationCode;
+}

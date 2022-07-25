@@ -13,6 +13,9 @@ import { AppContainer } from './AppContainer';
 import {Provider} from 'react-redux';
 import {Store} from './redux/store';
 import { Login } from './views/Login';
+import { Start } from './views/Start';
+import { GetStarted } from './views/GetStarted';
+//import { LandingPage } from './views/LandingPage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
 import AppLoading from 'expo-app-loading';
@@ -63,7 +66,7 @@ const App = () => {
           //userLoggedIn = true;
           console.log(initialRoute);
         }else{
-          setInitialRoute("Login");
+          setInitialRoute("Start");
           console.log("user not found");
         }
       } catch(e) {
@@ -103,9 +106,12 @@ const App = () => {
                 <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }} mode="modal">
                     <Stack.Screen name="AppContainer" children={() => <AppContainer loggedInFirst={loggedInFirst} /> } />
                     <Stack.Screen name="Login" component={Login} />
+                    <Stack.Screen name="Start" component={Start} />
+                    <Stack.Screen name="GetStarted" component={GetStarted} />
                 </Stack.Navigator>
-                <StatusBar />
+                
             </NavigationContainer> 
+            
         </View>
       </Provider>
   ) : (
