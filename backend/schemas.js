@@ -7,7 +7,24 @@ export const userSchema = {
         _partition: "string",
         phoneNumber: "int",
         geocash: "int",
-        username: "string",
+        username: 'string',
+        expoPushToken: 'string',
+        password: 'string',
+        commented: {
+            type: "list",
+            objectType: 'string'
+        },
+        downvoted: {
+            type: "list",
+            objectType: 'string'
+        },
+        upvoted: {
+            type: "list",
+            objectType: 'string'
+        },
+        lastLoggedIn: 'string',
+        lastLoggedOut: 'string'
+
     },
     primaryKey: '_id'
 }

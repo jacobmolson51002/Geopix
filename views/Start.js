@@ -21,7 +21,7 @@ export const Start = ({ navigation }) => {
         },
         buttons: {
             flex: 1,
-            width: '60%',
+            width: '90%',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center'
@@ -32,10 +32,9 @@ export const Start = ({ navigation }) => {
             justiftyContent: 'center',
             display: 'flex',
             backgroundColor: '#bebebe',
-            height: 40,
             marginBottom: 30,
-            borderRadius: 20,
-            paddingTop: 10,
+            borderRadius: 10,
+            padding: 14,
         },
         register: {
             width: '100%',
@@ -43,9 +42,8 @@ export const Start = ({ navigation }) => {
             justiftyContent: 'center',
             display: 'flex',
             backgroundColor: 'turquoise',
-            paddingTop: 10,
-            height: 40,
-            borderRadius: 20
+            padding: 14,
+            borderRadius: 10
         },
         buttonText: {
             color: '#222222',

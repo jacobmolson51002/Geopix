@@ -1,16 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Dimensions, Text, View, Button, TextInput, TouchableOpacity, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
+import { Dimensions, Text, View, Button, TextInput, TouchableOpacity, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, KeyboardAvoidingView, Switch } from 'react-native';
 import { sendVerificationText, checkUsername } from '../backend/database';
-import {  } from '../backend/realm';
-import { useSelector } from 'react-redux';
+import { openUserRealm } from '../backend/realm';
+import { useSelector, useDispatch } from 'react-redux';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as Location from 'expo-location';
+import { Camera, CameraType } from 'expo-camera';
+import * as Notifications from 'expo-notifications';
+
 
 
 export const TextVerification = ({ setPhoneNumber }) => {
     const navigation = useNavigation();
     const focusInput = useRef();
     const [number, setNumber] = useState("");
+    const [numberInUse, setNumberInUse] = useState(false);
     const [verificationCode, setVerificationCode] = useState('');
     const [buttonClicked, setButtonClicked] = useState(false);
     const [userVerification, setUserVerification] = useState('');
@@ -23,11 +28,21 @@ export const TextVerification = ({ setPhoneNumber }) => {
     const sendMessage = async () => {
         if(number.length === 12){
             setButtonClicked(true);
-            await sendVerificationText(number).then((code) => {
-                console.log(code.code);
-                setVerificationCode(code.code);
+            let check = number.replace(/-/g, '');
+            check = parseInt(check);
+            const checkNumber = await checkUsername(check, false);
+            console.log(checkNumber);
+            if(checkNumber === 'invalid'){
+                await sendVerificationText(number).then((code) => {
+                    console.log(code.code);
+                    setVerificationCode(code.code);
+                    setButtonClicked(false);
+                });
+            }else{
                 setButtonClicked(false);
-            });
+                setNumberInUse(true);
+            }
+
         }
 
     }
@@ -116,6 +131,17 @@ export const TextVerification = ({ setPhoneNumber }) => {
             justifyContent: 'flex-end',
             position: 'relative',
             bottom: 15
+        },
+        phoneNumberInvalid: {
+            marginTop: 15,
+            width: "100%",
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+        },
+        invalidText: {
+            color: 'orange',
+            fontSize: 14
         }
     }
 
@@ -128,7 +154,7 @@ export const TextVerification = ({ setPhoneNumber }) => {
                     <Text style={styles.text}>Let's get you started.</Text>
                     <Text style={styles.subHeader}>
                         {verificationCode === '' ? (
-                        "First, what is your phone number?"
+                        "First, what's your phone number?"
                         ) : (
                         "Enter your verification code"
                         )}
@@ -151,12 +177,21 @@ export const TextVerification = ({ setPhoneNumber }) => {
                                 setNumber(newValue)
                             }
                         }
+                        if((newValue.length < number.length) && numberInUse){
+                            setNumberInUse(false);
+                        }
                     }}
                     keyboardAppearance="dark"
                     placeholder="phone"
                     placeholderTextColor="#bebebe"
                     />
-
+                {numberInUse ? (
+                <View style={styles.phoneNumberInvalid}>
+                    <Text style={styles.invalidText}>phone number already in use</Text>
+                </View>
+                ) : (
+                <View />
+                )}
                 </View>
                 ) : (
                 <View>
@@ -180,7 +215,7 @@ export const TextVerification = ({ setPhoneNumber }) => {
             </View>
             {verificationCode === '' ? (
                 <View style={styles.buttonView}>
-                    <TouchableOpacity style={styles.sendText} onPress={sendMessage} >
+                    <TouchableOpacity disabled={number.length === 12 ? false : true} style={styles.sendText} onPress={sendMessage} >
                         {buttonClicked === false ? (
                         <Text style={{ color: '#222222', fontSize: 18, fontWeight: 'bold' }}>Send text</Text>
                         ) : (
@@ -221,8 +256,8 @@ export const Username = ({ setUsername }) => {
     const verifyUsername = async () => {
         setButtonClicked(true);
         if(name.length >= 5){
-            const valid = await checkUsername(name);
-            if(valid){
+            const valid = await checkUsername(name, true);
+            if(valid === 'invalid'){
                 setButtonClicked(false);
                 setNameTaken(false);
                 setUsername(name);
@@ -368,6 +403,10 @@ export const Password = ({setPassword}) => {
     const [dontMatch, setDontMatch] = useState(false);
     const [confirming, setConfirming] = useState(false);
 
+    useEffect(() => {
+        focusInput.current.focus();
+    });
+
     const firstPassword = () => {
         setButtonClicked(true)
         if(usersPassword.length >= 6){
@@ -506,7 +545,9 @@ export const Password = ({setPassword}) => {
                 secureTextEntry={true}
             />
             {dontMatch ? (
+                <View style={{ width: '100%', display: 'flex', justiftyContent: 'center', alignItems: 'center' }}>
                 <Text style={{ color: 'red', marginTop: 20 }}>Passwords don't match</Text>
+                </View>
             ) : (
                 <View />
             )}
@@ -542,20 +583,160 @@ export const Password = ({setPassword}) => {
     )
 }
 
-export const Permissions = ({  }) => {
+export const Permissions = ({ phoneNumber, username, password }) => {
 
     const navigation = useNavigation();
+    const dispatch = useDispatch();
+    const [buttonClicked, setButtonClicked] = useState(false);
+    const [location, setLocation] = useState(false);
+    const [camera, setCamera] = useState(false);
+    const [notifications, setNotifications] = useState(false);
+    
+    const locationPermissions = async () => {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+            setLocation(false);
+        }else{
+            setLocation(true);
+        }
+    }
+
+    const cameraPermissions = async () => {
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        if(status != 'granted'){
+            setCamera(false);
+        }{
+            setCamera(true);
+        }
+    }
+
+    const notificationPermissions = async () => {
+        const { status } = await Notifications.getPermissionsAsync();
+        if(status != 'granted'){
+            setNotifications(false);
+        }{
+            setNotifications(true);
+        }
+    }
+
+    const login = async () => {
+        phoneNumber = phoneNumber.replace(/-/g, '');
+        const newNumber = parseInt(phoneNumber);
+        await openUserRealm(dispatch, true, false, '', username, password, newNumber).then(() => {
+            navigation.navigate('AppContainer');
+        });
+
+    }
 
 
     const styles = {
         wrapper: {
             flex: 1,
-            backgroundColor: "#222222"
+            backgroundColor: "#222222",
+            justiftyContent: 'center',
+            alignItems: 'center',
+            display: 'flex',
+            paddingTop: 50
+        },
+        button: {
+            width: '100%',
+            position: 'absolute',
+            bottom: 40,
+            display: 'flex',
+            justiftyContent: 'center',
+            alignItems: 'center'
+        },
+        loginButton: {
+            backgroundColor: (location && camera) ? 'turquoise' : '#5C5B57',
+            padding: 14,
+            fontSize: 18,
+            color: '#222222',
+            borderRadius: 10,
+            display: 'flex',
+            justiftyContent: 'center',
+            alignItems: 'center',
+            width: '90%',
+            marginTop: 20,
+            marginLeft: '30%',
+            position: 'absolute',
+            bottom: 0
+        },
+        header: {
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        text: {
+            color: 'white',
+            fontSize: 30,
+            fontWeight: 'bold'
+        },
+        subHeader: {
+            fontSize: 15,
+            color: 'white',
+            marginTop: 30
+        },
+        permissions: {
+            marginTop: 100,
+            display: 'flex',
+            justfiyContent: 'center',
+            alignItems: 'center'
+        },
+        option: {
+            width: '40%',
+            marginBottom: 50,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+        },
+        permissionPrompt: {
+            color: 'white',
+            fontSize: 17,
+            fontWeight: 'bold',
+            marginBottom: 3,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+        },
+        permissionsSubheader: {
+            color:'white',
+            fontSize: 12,
+            marginBottom: 10
         }
     }
     return(
         <View style={styles.wrapper}>
-
+            <View style={styles.header}>
+                <Text style={styles.text}>One more thing</Text>
+                <Text style={styles.subHeader}>Geopix needs your permission to use these services</Text>
+            </View>
+            <View style={styles.permissions}>
+                <View style={styles.option}>
+                    <Text style={styles.permissionPrompt}>Location</Text>
+                    <Text style={styles.permissionsSubheader}>(to see cool geopics nearby!)</Text>
+                    <Switch value={location} onValueChange={locationPermissions}></Switch>
+                </View>
+                <View style={styles.option}>
+                    <Text style={styles.permissionPrompt}>Camera</Text>
+                    <Text style={styles.permissionsSubheader}>(to post cool geopics!)</Text>
+                    <Switch value={camera} onValueChange={cameraPermissions}></Switch>
+                </View>
+                <View style={styles.option}>
+                    <Text style={styles.permissionPrompt}>Notifications</Text>
+                    <Text style={styles.permissionsSubheader}>(to stay in the loop!)</Text>
+                    <Switch value={notifications} onValueChange={notificationPermissions}></Switch>
+                </View>
+            </View>
+            <View style={styles.button}>
+                <TouchableOpacity disabled={(location && camera) ? false : true} style={styles.loginButton} onPress={login} >
+                    {buttonClicked === false ? (
+                    <Text style={{ color: '#222222', fontSize: 18, fontWeight: 'bold' }}>Jump in</Text>
+                    ) : (
+                    <ActivityIndicator size='small' color="#222222" />
+                    )}
+                </TouchableOpacity>
+            </View>
         </View>
     )
 }
@@ -563,8 +744,6 @@ export const Permissions = ({  }) => {
 export const GetStarted = ({navigation}) => {
     const Stack = createNativeStackNavigator();
     const [phoneNumber, setPhoneNumber] = useState('');
-    const [name, setName] = useState('');
-    const [birthday, setBirthday] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
@@ -591,7 +770,7 @@ export const GetStarted = ({navigation}) => {
                 <Stack.Screen name="textVerification" children={() => <TextVerification setPhoneNumber={setPhoneNumber} />} />
                 <Stack.Screen name="username" children={() => <Username setUsername={setUsername} />}/>
                 <Stack.Screen name="password" children={() => <Password  setPassword={setPassword} />}/>
-                <Stack.Screen name="permissions" children={() => <Permissions phoneNumber={phoneNumber} name={name} birthday={birthday} username={username} password={password} /> }/>
+                <Stack.Screen name="permissions" children={() => <Permissions phoneNumber={phoneNumber} username={username} password={password} /> }/>
             </Stack.Navigator>
         </View>
     )

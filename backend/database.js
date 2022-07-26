@@ -670,12 +670,23 @@ export const sendVerificationText = async (number) => {
   return verificationCode;
 }
 
-export const checkUsername = async (username) => {
+export const checkUsername = async (credential, username) => {
   const users = mongodb.db('users').collection('info');
-  const check = await users.findOne({username: username});
-  if(check === null){
-    return true
+  let check;
+  if(username){
+    check = await users.findOne({username: credential});
+    if(check === null){
+      return 'invalid'
+    }else{
+      return check
+    }
   }else{
-    return false
+    check = await users.findOne({phoneNumber: credential});
+    if(check === null){
+      return 'invalid'
+    }else{
+      return check
+    }
   }
+
 }

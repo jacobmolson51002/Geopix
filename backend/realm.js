@@ -47,7 +47,7 @@ export const openUserRealm = async (dispatch, register, login, userID, username,
     userID = new ObjectId();
   }
   const credentials = Realm.Credentials.anonymous();
-  await app.login(credentials);
+  await app.logIn(credentials);
   const OpenRealmBehaviorConfiguration = {
     type: "openImmediately",
   }
@@ -81,10 +81,10 @@ export const openUserRealm = async (dispatch, register, login, userID, username,
           lastLoggedOut: ''
         });
       });
-      await AsyncStorage.setItem('userID', userUuid);
+      await AsyncStorage.setItem('userID', `${userID}`);
       await AsyncStorage.setItem('username', username);
     }else if(login){
-      await AsyncStorage.setItem('userID', userUuid);
+      await AsyncStorage.setItem('userID', userID);
       await AsyncStorage.setItem('username', username);
       realm.write(async () => {
         const currentUser = await realm.objectForPrimaryKey('info', ObjectId(userID));
