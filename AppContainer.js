@@ -15,6 +15,7 @@ import AppLoading from 'expo-app-loading';
 import { getGeopics } from './backend/database';
 import { useSelector, useDispatch } from 'react-redux';
 import { openUserRealm } from './backend/realm';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export const AppContainer = ({ loggedInFirst }) => {
@@ -29,7 +30,8 @@ export const AppContainer = ({ loggedInFirst }) => {
         (async () => {
             if(loggedInFirst == false){
                 console.log('opening realm');
-                await openUserRealm(dispatch, false, false);
+                const userID = await AsyncStorage.getItem('userID');
+                await openUserRealm(dispatch, false, false, userID);
                 setUserInfoReady(true);
             }
 

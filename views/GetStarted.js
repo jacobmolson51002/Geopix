@@ -38,7 +38,7 @@ export const TextVerification = ({ setPhoneNumber }) => {
             setButtonClicked(false);
             if(userVerification === verificationCode){
                 setPhoneNumber(number);
-                navigation.navigate('personalInfo');
+                navigation.navigate('username');
             }else{
                 setInvalidCode(true);
             }
@@ -207,7 +207,7 @@ export const TextVerification = ({ setPhoneNumber }) => {
     )
 }
 
-export const AppInfo = ({ setUsername }) => {
+export const Username = ({ setUsername }) => {
     const navigation = useNavigation();
     const focusInput = useRef();
     const [name, setName] = useState('');
@@ -226,7 +226,7 @@ export const AppInfo = ({ setUsername }) => {
                 setButtonClicked(false);
                 setNameTaken(false);
                 setUsername(name);
-                navigation.navigate('textVerification');
+                navigation.navigate('password');
             }else{
                 setButtonClicked(false);
                 setNameTaken(true);
@@ -315,10 +315,10 @@ export const AppInfo = ({ setUsername }) => {
         <KeyboardAvoidingView style={styles.wrapper} behavior={'padding'}>
             <View style={styles.inputSection}>
                 <View style={styles.textSection}>
-                    <Text style={styles.text}>Let's get started</Text>
+                    <Text style={styles.text}>Thanks</Text>
                     <Text style={styles.subHeader}>
                         {nameTaken === false ? (
-                        "First, what do you want to be known as?"
+                        "Next, what do you want to be known as?"
                         ) : (
                         "Sorry, that name is taken. Try another"
                         )}
@@ -357,10 +357,36 @@ export const AppInfo = ({ setUsername }) => {
     )
 }
 
-export const PersonalInfo = ({setBirthday}) => {
+export const Password = ({setPassword}) => {
 
-    const [userBirthday, setUserBirthday] = useState('');
-    const [verificationCode, setVerificationCode] = useState('');
+    const navigation = useNavigation();
+    const focusInput = useRef();
+    const [usersPassword, setUsersPassword] = useState('');
+    const [buttonClicked, setButtonClicked] = useState(false);
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [confirmed, setConfirmed] = useState(false);
+    const [dontMatch, setDontMatch] = useState(false);
+    const [confirming, setConfirming] = useState(false);
+
+    const firstPassword = () => {
+        setButtonClicked(true)
+        if(usersPassword.length >= 6){
+            setConfirming(true);
+            setButtonClicked(false);
+        }
+    }
+
+    const confirm = () => {
+        setButtonClicked(true);
+        if(usersPassword === confirmPassword){
+            setPassword(usersPassword)
+            setConfirmed(true);
+            navigation.navigate('permissions');
+        }else{
+            setButtonClicked(false);
+            setDontMatch(true);
+        }
+    }
 
     const styles = {
         wrapper: {
@@ -392,7 +418,7 @@ export const PersonalInfo = ({setBirthday}) => {
             marginTop: 30
         },
         sendText: {
-            backgroundColor: verificationCode === '' ? (number.length === 12 ? 'turquoise' : '#5C5B57') : (userVerification.length === 6 ? 'turquoise' : '#5C5B57'),
+            backgroundColor: usersPassword.length >= 6 ? 'turquoise' : '#5C5B57',
             padding: 14,
             fontSize: 18,
             color: '#222222',
@@ -406,7 +432,7 @@ export const PersonalInfo = ({setBirthday}) => {
             position: 'absolute',
             bottom: 0
         },
-        phoneNumberInput: {
+        passwordInput: {
             marginTop: 40,
             width: '80%',
             padding: 10,
@@ -439,73 +465,87 @@ export const PersonalInfo = ({setBirthday}) => {
     const back = '<';
     return (
 
-            <KeyboardAvoidingView style={styles.wrapper} behavior={'padding'}>
-            <View style={styles.inputSection}>
-                <View style={styles.textSection}>
-                    <Text style={styles.text}>Let's get you started.</Text>
-                    <Text style={styles.subHeader}>
-                        {verificationCode === '' ? (
-                        "First, what is your phone number?"
-                        ) : (
-                        "Enter your verification code"
-                        )}
-                    </Text>
-                </View>
-                <View>
-                <TextInput
-                    textAlign={"center"}
-                    ref={focusInput}
-                    style={styles.phoneNumberInput}
-                    value={number}
-                    keyboardType={Platform.OS === "ios" ? "number-pad" : "numeric"}
-                    onChangeText={(newValue) => {
-                        if(newValue.length <= 12){
-                            if((newValue.length > number.length) && (newValue.length === 3 || newValue.length === 7)){
-                                console.log('length is 3');
-                                setNumber(`${newValue}-`);
-                            }else{
-                                setNumber(newValue)
-                            }
-                        }
-                    }}
-                    keyboardAppearance="dark"
-                    placeholder="phone"
-                    placeholderTextColor="#bebebe"
-                    />
 
-                </View>
+        <KeyboardAvoidingView style={styles.wrapper} behavior={'padding'}>
+        <View style={styles.inputSection}>
+            <View style={styles.textSection}>
+                <Text style={styles.text}>Great choice</Text>
+                <Text style={styles.subHeader}>
+                    {confirming === false ? (
+                    "Next, choose a password you won't forget"
+                    ) : (
+                    "Confirm your password"
+                    )}
+                </Text>
+            </View>
+            {confirming === false ? (
+            <View>
+            <TextInput
+                textAlign={"center"}
+                ref={focusInput}
+                style={styles.passwordInput}
+                defaultValue={usersPassword}
+                onChangeText={(newValue) => {setUsersPassword(newValue)}}
+                keyboardAppearance="dark"
+                placeholder="password"
+                placeholderTextColor="#bebebe"
+                secureTextEntry={true}
+                />
 
             </View>
-            {verificationCode === '' ? (
-                <View style={styles.buttonView}>
-                    <TouchableOpacity style={styles.sendText} onPress={sendMessage} >
-                        {buttonClicked === false ? (
-                        <Text style={{ color: '#222222', fontSize: 18, fontWeight: 'bold' }}>Send text</Text>
-                        ) : (
-                        <ActivityIndicator size='small' color="#222222" />
-                        )}
-                    </TouchableOpacity>
-                </View>
             ) : (
-                <View style={styles.buttonView}>
-                    
-                    <TouchableOpacity style={styles.backToNumber} onPress={() => {setVerificationCode('')}}>
-                        <Text style={{ color: 'white', fontSize: 30 }}>{back}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.sendText} onPress={verifyCode}  >
+            <View>
+            <TextInput
+                textAlign={"center"}
+                ref={focusInput}
+                style={styles.passwordInput}
+                defaultValue={confirmPassword}
+                onChangeText={(newValue) => {setConfirmPassword(newValue)}}
+                keyboardAppearance="dark"
+                placeholder="confirm" 
+                secureTextEntry={true}
+            />
+            {dontMatch ? (
+                <Text style={{ color: 'red', marginTop: 20 }}>Passwords don't match</Text>
+            ) : (
+                <View />
+            )}
+            </View>
+            )}
+        </View>
+        {confirming === false ? (
+            <View style={styles.buttonView}>
+                <TouchableOpacity style={styles.sendText} onPress={firstPassword} >
                     {buttonClicked === false ? (
-                    <Text style={{ color: '#222222', fontSize: 18, fontWeight: 'bold' }}>Verify</Text>
+                    <Text style={{ color: '#222222', fontSize: 18, fontWeight: 'bold' }}>Next</Text>
                     ) : (
                     <ActivityIndicator size='small' color="#222222" />
                     )}
                 </TouchableOpacity>
-                </View>
-            )}
-            </KeyboardAvoidingView>
+            </View>
+        ) : (
+            <View style={styles.buttonView}>
+                
+                <TouchableOpacity style={styles.backToNumber} onPress={() => {setConfirming(false)}}>
+                    <Text style={{ color: 'white', fontSize: 30 }}>{back}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.sendText} onPress={confirm}  >
+                {buttonClicked === false ? (
+                <Text style={{ color: '#222222', fontSize: 18, fontWeight: 'bold' }}>Confirm Password</Text>
+                ) : (
+                <ActivityIndicator size='small' color="#222222" />
+                )}
+            </TouchableOpacity>
+            </View>
+        )}
+        </KeyboardAvoidingView>
     )
 }
 
-export const Success = ({navigation}) => {
+export const Permissions = ({  }) => {
+
+    const navigation = useNavigation();
+
 
     const styles = {
         wrapper: {
@@ -549,9 +589,9 @@ export const GetStarted = ({navigation}) => {
         <View style={styles.wrapper}>
             <Stack.Navigator screenOptions={{ animation: 'none', headerShown: false }} initialRouteName="textVerification" >
                 <Stack.Screen name="textVerification" children={() => <TextVerification setPhoneNumber={setPhoneNumber} />} />
-                <Stack.Screen name="personalInfo" children={() => <PersonalInfo setName={setName} setBirthday={setBirthday} />}/>
-                <Stack.Screen name="appInfo" children={() => <AppInfo setUsername={setUsername} setPassword={setPassword} />}/>
-                <Stack.Screen name="success" children={() => <Success phoneNumber={phoneNumber} name={name} birthday={birthday} username={username} password={password} /> }/>
+                <Stack.Screen name="username" children={() => <Username setUsername={setUsername} />}/>
+                <Stack.Screen name="password" children={() => <Password  setPassword={setPassword} />}/>
+                <Stack.Screen name="permissions" children={() => <Permissions phoneNumber={phoneNumber} name={name} birthday={birthday} username={username} password={password} /> }/>
             </Stack.Navigator>
         </View>
     )

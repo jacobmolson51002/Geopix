@@ -41,7 +41,7 @@ const App = () => {
   const notificationListener = useRef();
   const responseListener = useRef();
   const [initialRoute, setInitialRoute] = useState(null);
-  const [loggedInFirst, setLoggedInFirst] = useState(false);
+  const [loggedInFirst, setLoggedInFirst] = useState(null);
   const Stack = createNativeStackNavigator();
 
 
@@ -59,13 +59,14 @@ const App = () => {
 
 
         if(loginCredentials !== null){
+          setLoggedInFirst(false);
           setInitialRoute("AppContainer");
-          setLoggedInFirst(true);
           
           //navigationRef.navigate("Home");
           //userLoggedIn = true;
           console.log(initialRoute);
         }else{
+          setLoggedInFirst(true);
           setInitialRoute("Start");
           console.log("user not found");
         }

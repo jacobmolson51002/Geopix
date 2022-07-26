@@ -42,8 +42,12 @@ const sortByTime = (conversations) => {
   return SortedConversations;
 }
 
-export const openUserRealm = async (dispatch, newUser, logUsername) => {
-  console.log(app.currentUser.id);
+export const openUserRealm = async (dispatch, register, login, userID, username, password, phoneNumber) => {
+  if(register){
+    userID = new ObjectId();
+  }
+  const credentials = Realm.Credentials.anonymous();
+  await app.login(credentials);
   const OpenRealmBehaviorConfiguration = {
     type: "openImmediately",
   }
@@ -51,7 +55,7 @@ export const openUserRealm = async (dispatch, newUser, logUsername) => {
     schema: [userSchema, Conversation],// add multiple schemas, comma seperated.
     sync: {
       user: app.currentUser, // loggedIn User
-      partitionValue: `${app.currentUser.id}`,
+      partitionValue: `${userID}`,
       newRealmFileBehavior: OpenRealmBehaviorConfiguration,
       existingRealmFileBehavior: OpenRealmBehaviorConfiguration, // should be userId(Unique) so it can manage particular user related documents in DB by userId
     }
@@ -60,27 +64,32 @@ export const openUserRealm = async (dispatch, newUser, logUsername) => {
   const userRealm = await Realm.open(configuration).then(async (realm) => {
     dispatch(setUserRealm(realm));
 
-    if(newUser){
-      const randomNum = Math.floor(Math.random() * 10000);
-      const username = `user ${randomNum}`;
+    if(register){
       realm.write(async () => {
         realm.create('info', {
-          _id: new ObjectId(),
-          _partition: app.currentUser.id,
+          _id: userID,
+          _partition: `${userID}`,
           geocash: 0,
           username: username,
-          phoneNumber: 3147360833
+          phoneNumber: phoneNumber,
+          expoPushToken: '',
+          password: password,
+          commented: [],
+          downvoted: [],
+          upvoted: [],
+          lastLoggedIn: `${new Date()}`,
+          lastLoggedOut: ''
         });
       });
+      await AsyncStorage.setItem('userID', userUuid);
       await AsyncStorage.setItem('username', username);
-    }else{
-      if(logUsername){
-        const userID = await AsyncStorage.getItem('userID');
-        user = await getUser(userID);
-        console.log(user);
-        await AsyncStorage.setItem('username', user.username);
-      }
-
+    }else if(login){
+      await AsyncStorage.setItem('userID', userUuid);
+      await AsyncStorage.setItem('username', username);
+      realm.write(async () => {
+        const currentUser = await realm.objectForPrimaryKey('info', ObjectId(userID));
+        currentUser.lastLoggedIn = `${new Date()}`;
+      });
     }
 
     const conversations = await realm.objects('conversations');
@@ -118,26 +127,16 @@ export const openUserRealm = async (dispatch, newUser, logUsername) => {
 }
 
 //function to login the user
-export const logUserIn = async (email, password, newUser, dispatch) => {
+export const logUserIn = async (username, phoneNumber, password, userID, dispatch) => {
       //const dispatch = useDispatch();
       //login the user
       //const credentials = await Realm.Credentials.emailPassword("jacobmolson");
-      const credentials = Realm.Credentials.emailPassword(
-        email,
-        password
+
+      
+      openUserRealm(dispatch, newUser, true);
+      return (
+        "successful login"
       );
-      try {
-        const loggedInUser = await app.logIn(credentials);
-        await AsyncStorage.setItem('userID', loggedInUser.id)
-        openUserRealm(dispatch, newUser, true);
-        return (
-          "successful login"
-        );
-      } catch (e) {
-        return (
-          e
-        );
-      }
       
 
       console.log(loggedInUser);
