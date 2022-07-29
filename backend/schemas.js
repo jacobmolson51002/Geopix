@@ -22,6 +22,10 @@ export const userSchema = {
             type: "list",
             objectType: 'string'
         },
+        friends: {
+            type: "list",
+            objectType: 'string'
+        },
         lastLoggedIn: 'string',
         lastLoggedOut: 'string'
 
@@ -43,6 +47,16 @@ export const Conversation = {
         lastMessage: "string",
         lastMessageFrom: "string",
         lastMessageTimestamp: "string",
+    },
+    primaryKey: '_id'
+}
+export const Request = {
+    name: "requests",
+    properties: {
+        _id: "objectId",
+        _partition: "string",
+        userID: "string",
+        timestamp: 'string',
     },
     primaryKey: '_id'
 }

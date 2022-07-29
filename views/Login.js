@@ -31,7 +31,10 @@ export const TextVerification = ({ username, phoneNumber, password, code, user }
             setButtonClicked(false);
             if(userVerification === code){
                 await openUserRealm(dispatch, false, true, user._partition, username, password, phoneNumber).then(() => {
-                    navigation.navigate('AppContainer');
+                    navigation.reset({
+                        index: 0,
+                        routes: [{name: 'AppContainer'}],
+                      });
                 })
             }else{
                 setInvalidCode(true);

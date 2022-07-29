@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Login } from './Login';
 import { Map } from './Map';
 import { Feed } from './Feed';
 import { Profile } from './Profile';
 import { Inbox } from './Inbox';
-import { SafeAreaView, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyBoardAvoidingView, TouchableWithoutFeedback, Dimensions, View, Text, Button, KeyboardAvoidingView, ScrollView, Keyboard } from 'react-native';
+import { ActivityIndicator, SafeAreaView, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyBoardAvoidingView, TouchableWithoutFeedback, Dimensions, View, Text, Button, KeyboardAvoidingView, ScrollView, Keyboard } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -28,6 +28,7 @@ export const AppHome = ({ navigation }) => {
     const [currentGeopic, setCurrentGeopic] = useState({username: 'jacob'});
     const [comments, setComments] = useState({});
     const [comment, setComment] = useState("");
+    const [buttonClicked, setButtonClicked] = useState(false);
 
     const Tab = createBottomTabNavigator();
 
@@ -82,13 +83,13 @@ export const AppHome = ({ navigation }) => {
     }
 
     const addCommentPressed = async () => {
+        setButtonClicked(true);
         const currentTime = new Date();
-        //use Async storage to get username
-        const username = 'jacobmolson';
+        const userID = await AsyncStorage.getItem('userID');
         const commentToAdd = {
             geopicID: currentGeopic._id,
             comment: comment,
-            username: username,
+            userID: `${userID}`,
             votes: [0,0,0],
             replies: 0,
             reply: false,
@@ -99,6 +100,7 @@ export const AppHome = ({ navigation }) => {
         newComments.unshift(newComment);
         setComments(newComments);
         setComment("");
+        setButtonClicked(false);
         
     }
 
@@ -176,18 +178,32 @@ export const AppHome = ({ navigation }) => {
         }
     })
 
+    const focusInput = useRef();
+
+    useEffect(() => {
+        if(currentGeopic.comments === 0){
+            focusInput.current.focus();
+        }
+    });
+
     const commentSection = () => (
         <View style={keyboardStyles.keyboardView}>
 
             <View style={styles.addCommentSection}>
-                    <TextInput returnKeyType="send" keyboardAppearance='dark' placeholderTextColor="#bebebe" multiline={true} defaultValue={comment} onChangeText={newText => setComment(newText)} placeholder={currentGeopic.comments === 0 ? "Be the first to comment" : "Add comment"} style={styles.addComment}/>
+                    <TextInput ref={focusInput} returnKeyType="send" keyboardAppearance='dark' placeholderTextColor="#bebebe" multiline={true} defaultValue={comment} onChangeText={newText => setComment(newText)} placeholder={currentGeopic.comments === 0 ? "Be the first to comment" : "Add comment"} style={styles.addComment}/>
                     <View style={styles.buttonView} >
-                        <Button style={{ fontSize: 10, color: 'turquoise' }} title="Post" onPress={() => {addCommentPressed()}} />
+                        {buttonClicked === false ? (
+                        <TouchableOpacity onPress={() => {addCommentPressed()}} >
+                            <Text style={{ fontSize: 16, color: 'turquoise' }}>Post</Text>
+                        </TouchableOpacity>
+                        ) : (
+                            <ActivityIndicator color={'turquoise'} small={'medium'} />
+                        )}
                     </View>
             </View>
-            {currentGeopic.comments > 0 && Object.keys(comments).length === 0 ? (
+            {currentGeopic.comments > 0 && Object.keys(comments).length === 0 ? ( //
                 <View style={{ marginTop: 10, width: '100%', alignItems: 'center', justiftyContent: 'center', display: 'flex' }}>
-                    <Text style={{ color: '#bebebe' }}>Loading...</Text>
+                    <ActivityIndicator color={'#bebebe'} size={'small'} />
                 </View>
             ) : (
                 <FlatList style={styles.commentList} data={comments} renderItem={renderItem} keyExtractor={keyExtractor} />

@@ -11,6 +11,7 @@ export const SET_UNREAD_COUNT = 'SET_UNREAD_COUNT';
 export const SET_USER_REALM = 'SET_USER_REALM';
 export const SET_MESSAGES_REALM = 'SET_MESSAGES_REALM';
 export const SET_CURRENT_CONVERSATION = 'SET_CURRENT_CONVERSATION';
+export const SET_REQUESTS = 'SET_REQUESTS';
 
 export const setMessageData = messageData => dispatch => {
     dispatch({
@@ -18,6 +19,13 @@ export const setMessageData = messageData => dispatch => {
         payload: messageData
     });
 };
+
+export const setRequests = requests => dispatch => {
+    dispatch({
+        type: SET_REQUESTS,
+        payload: requests
+    })
+}
 
 export const setUnreadCount = unreadCount => dispatch => {
     dispatch({

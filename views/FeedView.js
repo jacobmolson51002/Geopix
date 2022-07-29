@@ -243,7 +243,8 @@ class SingleView extends React.PureComponent {
         const viewComments = async () => {
             //const geopicComments = await getComments(geopic._id);
             setComments({});
-            sheetRef.current.snapTo(1)
+            setCurrentGeopic(geopic);
+            sheetRef.current.snapTo(1);
             if(viewed === false){
                 const geopicComments = await getComments(geopic._id);
                 let viewedComments = await getViewedComments(geopicComments);
@@ -254,7 +255,6 @@ class SingleView extends React.PureComponent {
                 
                  
             }
-            setCurrentGeopic(geopic);
             setComments(currentComments);
             
             
@@ -274,11 +274,17 @@ class SingleView extends React.PureComponent {
                     <View  style={styles.captionBox}>
                         <Text style={styles.geopicInfo}><TouchableOpacity style={{ margin: 0,padding: 0 }}onPress={() => {profile(geopic.userID)}}><Text style={styles.geopicInfo}>{geopic.username}</Text></TouchableOpacity>   •   <Text style={{ fontWeight: 'bold', fontSize: 12, color: "white" }}>{Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}</Text></Text>
                         <View style={styles.captionTextBox} ><Text style={styles.captionText}>{geopic.caption}</Text></View>
-                        <TouchableOpacity onPress={() => {viewComments()}} ><Text style={styles.viewCommentsButton}>{geopic.comments} {geopic.comments === 1 ? "comment" : "comments"}</Text></TouchableOpacity>
+                        <TouchableOpacity onPress={() => {viewComments()}} >
+                            {geopic.comments > 0 ? (
+                                <Text style={styles.viewCommentsButton}>{geopic.comments} {geopic.comments === 1 ? "comment" : "comments"}</Text>
+                            ) : (
+                                <Text style={styles.viewCommentsButton}>Add comment</Text>
+                            )}
+                        </TouchableOpacity>
                     </View>
                     <Votes style={styles.votes} voteableItem={geopic} />
                 </View>
-                <StatusBar />
+                <StatusBar style="light" />
                
             </View>
         )
@@ -364,6 +370,7 @@ export const FeedView = (props) => {
     );
     const keyExtractor = useCallback((item) => item._id, []);
     return (
+        <View style={{ flex: 1 }}>
             <FlatList style={{ flex: 1, backgroundColor: '#222222' }} 
                       data={geopics} renderItem={renderItem} 
                       keyExtractor={keyExtractor} 
@@ -376,7 +383,8 @@ export const FeedView = (props) => {
                       decelerationRate='fast'
 
                       >
-                      <StatusBar />
             </FlatList>
+            <StatusBar style="light" />
+        </View>
     )
 }

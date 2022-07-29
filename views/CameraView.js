@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableWithoutFeedback, Keyboard, ScrollView, KeyboardAvoidingView, TextInput, View, Text, TouchableOpacity, ImageBackground, Image, StyleSheet, Button } from 'react-native';
+import { ActivityIndicator, TouchableWithoutFeedback, Keyboard, ScrollView, KeyboardAvoidingView, TextInput, View, Text, TouchableOpacity, ImageBackground, Image, StyleSheet, Button } from 'react-native';
 import { Camera, CameraType } from 'expo-camera';
 import { geopicUpload, loginUser } from '../backend/database';
 import { setLocation } from '../backend/location';
@@ -194,30 +194,127 @@ const ReviewAndUpload = ({ route, navigation }) => {
   const dispatchData = useSelector(state => state.geopicsReducer);
   const dispatch = useDispatch();
   const [caption, setCaption] = useState("");
+  const [buttonClicked, setButtonClicked] = useState(false);
   
   //upload the pic to firebase storage and mongodb
   const { url } = route.params;
 
   const uploadGeopic = async () => {
-    await geopicUpload({url: url, caption: caption}, location, dispatch, dispatchData);
-    navigation.navigate('AppHome');
+    console.log('buttonClicked');
+    setButtonClicked(true);
+    await geopicUpload({url: url, caption: caption}, location, dispatch, dispatchData).then(() => {
+      console.log('uploaded');
+      setButtonClicked(false);
+      navigation.navigate('AppHome');
+    });
+    
   }
 
+  console.log('rerendered');
+
   const backButton = "<-";
+  const styles = {
+      bottomBox: {
+        position: 'absolute',
+        bottom: 0,
+        width: '100%',
+        paddingBottom: 5,
+        flexDirection: 'row',
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+        textShadowOffset: {width: -1, height: 1},
+        textShadowRadius: 10
+      },
+      captionBox: {
+        width: '75%'
+      },
+      captionTextBox: {
+          flexDirection: 'row',
+          width: '100%',
+          flex: 1,
+          marginBottom: 5,
+          textShadowColor: 'rgba(0, 0, 0, 0.75)',
+          textShadowOffset: {width: -1, height: 1},
+          textShadowRadius: 10
+      },
+      captionText: {
+          fontSize: 15,
+          color: 'white',
+          flexWrap: 'wrap',
+          paddingLeft: 15,
+          textShadowColor: 'rgba(0, 0, 0, 0.75)',
+          textShadowOffset: {width: -1, height: 1},
+          textShadowRadius: 10
+      },
+      geopicInfo: { 
+          fontWeight: 'bold', 
+          color: 'white', 
+          paddingTop: 5,
+          paddingLeft: 15,
+          textShadowColor: 'rgba(0, 0, 0, 0.75)',
+          textShadowOffset: {width: -1, height: 1},
+          textShadowRadius: 10
+      },
+      viewCommentsButton: {
+          color: 'white',
+          paddingBottom: 10,
+          paddingLeft: 15,
+          textShadowColor: 'rgba(0, 0, 0, 1)',
+          textShadowOffset: {width: -1, height: 1},
+          textShadowRadius: 5
+      },
+      uploadButton: {
+        width: '90%',
+        height: '65%',
+        borderRadius: 10,
+        backgroundColor: 'turquoise',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      },
+      navSimulator: {
+        width: '100%', 
+        height: '10%',
+        backgroundColor: '#222222',
+        display: 'flex',
+        alignItems: 'center',
+        paddingTop: 10
+      },
+      retakeButtonContainer: {
+        position: 'absolute',
+        top: 50,
+        left: 20
+      },
+      retakeButton: {
+        color: 'white',
+        fontSize: 20
+      }
+  }
   return (
-    <KeyboardAvoidingView style={{ flex: 1, width: '100%', height: '100%', backgroundColor: 'black'}} 
+    <KeyboardAvoidingView style={{ flex: 1, width: '100%', height: '100%', backgroundColor: '#222222'}} 
     behavior={Platform.OS === "ios" ? "padding" : "height"}
   >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={{ flex: 1 }} >
-          <Image style={{ width: '100%', height: '77%' }} source={{uri: url}} />
-          <View style={{ width: '100%', height: '13%', backgroundColor: 'black', padding: 15 }} >
-            <TextInput defaultValue={caption} onChangeText={newText => setCaption(newText)} placeholder="Enter caption..." placeholderTextColor='white' style={{ color:'white', fontSize: 15 }}/>
-          </View> 
-          <View style={{ width: '100%', height: '10%', backgroundColor: 'black' }} >
-            <Button title="upload" onPress={uploadGeopic} style={{ margin: 20, color: 'turquoise' }} />
+      <View style={{ flex: 1 }}>
+        <View style={{ width: '100%', height: '90%'}} >
+          <Image style={{ width: '100%', height: '100%' }} source={{uri: url}} />
+          <View style={styles.bottomBox} >
+              <View  style={styles.captionBox}>
+                  <Text style={styles.geopicInfo}><View style={{ margin: 0,padding: 0 }}><Text style={styles.geopicInfo}>jacobmolson</Text></View><View style={{ margin: 0,padding:0 }}><Text style={styles.geopicInfo}>•    now</Text></View></Text>
+                  <View style={styles.captionTextBox} ><TextInput value={caption} onChangeText={newText => setCaption(newText)} placeholder="Enter caption..." placeholderTextColor='white' style={styles.captionText}/></View>
+                  <View ><Text style={styles.viewCommentsButton}>0 comments</Text></View>
+              </View>
           </View>
         </View>
+        <View style={styles.navSimulator} >
+          <TouchableOpacity onPress={uploadGeopic} style={styles.uploadButton} >
+              {buttonClicked === false ? (
+                <Text style={{ color: '#222222', fontSize: 18, fontWeight: 'bold' }}>Upload to Geopix</Text>
+              ) : (
+                <ActivityIndicator size='small' color="#222222" />
+              )}
+          </TouchableOpacity>
+        </View>
+      </View>
       </TouchableWithoutFeedback>
           <TouchableOpacity onPress={() => {navigation.navigate("takePicture")}} style={styles.retakeButtonContainer}>
             <Text style={styles.retakeButton}>{backButton}</Text>

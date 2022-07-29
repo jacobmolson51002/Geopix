@@ -45,7 +45,8 @@ export const Message = ({ navigation, route }) => {
     const styles = {
         wrapper: {
             flex: 1,
-            backgroundColor: '#222222'
+            backgroundColor: '#222222',
+            paddingBottom: 20
         },
         topBar: {
             height: '10%',
@@ -61,27 +62,30 @@ export const Message = ({ navigation, route }) => {
             padding: 10
         },
         messages: {
+            paddingTop: 10,
             height: '80%',
             display: 'flex',
         },
         inputView: {
             display: 'flex',
             justiftyContent: 'center',
-            flexDirection: 'row'
+            flexDirection: 'row',
         },
         message: {
             borderWidth: 1,
             borderColor: "#bebebe",
             borderRadius: 15,
-            paddingTop: 7,
-            paddingBottom: 7,
-            paddingLeft: 10,
-            paddingRight: 10,
+            paddingTop: 12,
+            paddingBottom: 12,
+            paddingLeft: 15,
+            paddingRight: 15,
             color: '#bebebe',
             width: '75%',
-            height: 30,
-            margin: 20,
-            fontSize: 16
+            marginLeft: 20,
+            marginBottom: 20,
+            marginTop: 20,
+            fontSize: 15,
+            maxHeight: 100
         },
         messagesView: {
             flex: 1,
@@ -91,15 +95,19 @@ export const Message = ({ navigation, route }) => {
         buttonContainer: {
             width: '15%',
             display: 'flex',
-            justiftyContent: 'center',
+            justifyContent: 'center',
             alignItems: 'center'
         },
         sendMessage: {
+            position: 'relative',
+            bottom: 19,
+            right: 14,
             color: 'white',
         }
     }
 
     const sendMessageClicked = async () => {
+        setMessage('');
         let newMessages = [];
         if(firstMessageNew === false){
             console.log('false');
@@ -129,7 +137,7 @@ export const Message = ({ navigation, route }) => {
             messageWrapper: {
                 width: '100%',
                 display: 'flex',
-                alignItems: 'flex-end'
+                alignItems: 'flex-end',
             },
             textBubble: {
                 maxWidth: '60%',
@@ -141,17 +149,18 @@ export const Message = ({ navigation, route }) => {
                 paddingBottom: 12,
                 fontSize: 15,
                 color: 'white',
-                backgroundColor: 'turquoise',
+                backgroundColor: '#77C1BA',
                 borderRadius: 25,
                 marginRight: 5,
                 marginTop: 1,
-                justifyContent: 'flex-end'
+                justifyContent: 'flex-end',
+                flexDirection: 'row'
             }
         }
         return(
             <View style={styles.messageWrapper}>
                 <View style={styles.textBubble}>
-                    <Text style={{ display: 'flex', flexWrap: 'wrap' }}>
+                    <Text style={{ display: 'flex', flexWrap: 'wrap', color: 'white', fontWeight: 'bold' }}>
                         {message.message}
                     </Text>
                 </View>
@@ -181,12 +190,13 @@ export const Message = ({ navigation, route }) => {
                 borderRadius: 25,
                 marginLeft: 5,
                 marginTop: 1,
+                flexDirection: 'row'
             }
         }
         return(
             <View style={styles.messageWrapper}>
                 <View style={styles.textBubble}>
-                    <Text style={{ display: 'flex', flexWrap: 'wrap' }}>
+                    <Text style={{ display: 'flex', flexWrap: 'wrap', fontWeight: 'bold', color:'white' }}>
                         {message.message}
                     </Text>
                 </View>

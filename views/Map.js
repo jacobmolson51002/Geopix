@@ -104,11 +104,11 @@ const DisplayMap = ({ sheetRef, setCurrentGeopic, setComments }) => {
               {geopics.geopics != null ? geopics.geopics.map((geopic, index) => {
                 //console.log(geopic.location.coordinates[0]);
                 if(geopic.hidden === false && geopic.clustered === false && greaterThan3Days(geopic) === false && geopic.viewed === false){
-                  return <Marker centerOffset={{x: 0, y: -20}} onPress={() => {navigation.navigate('singleView', {  navigation: navigation, geopic: geopic, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} >
+                  return <Marker key={index} centerOffset={{x: 0, y: -20}} onPress={() => {navigation.navigate('singleView', {  navigation: navigation, geopic: geopic, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} >
                             <Image source={require('./mapPin.png')} style={{ width: 15, height: 40 }}/>
                         </Marker>
                 }else if(geopic.viewed) {
-                  return <Marker centerOffset={{x: 0, y: -20}} onPress={() => {navigation.navigate('singleView', {  navigation: navigation, geopic: geopic, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} >
+                  return <Marker key={index} centerOffset={{x: 0, y: -20}} onPress={() => {navigation.navigate('singleView', {  navigation: navigation, geopic: geopic, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: geopic.location.coordinates[1], longitude: geopic.location.coordinates[0] }} >
                           <Image source={require('./mapPin.png')} style={{ width: 15, height: 40 }}/>
                         </Marker>
                 }
@@ -116,12 +116,12 @@ const DisplayMap = ({ sheetRef, setCurrentGeopic, setComments }) => {
               {geopics.clusters != null ? geopics.clusters.map((cluster, index) => {
                 //console.log(geopic.location.coordinates[0]);
                   if(cluster.viewed){
-                    <Marker onPress={() => {navigation.navigate('scrollView', { cluster: cluster.geopics, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: cluster.location.coordinates[1], longitude: cluster.location.coordinates[0] }} >
+                    <Marker key={index} onPress={() => {navigation.navigate('scrollView', { cluster: cluster.geopics, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: cluster.location.coordinates[1], longitude: cluster.location.coordinates[0] }} >
                       <Cluster color="pink" numberOfGeopics={cluster.numberOfGeopics} />
                     </Marker>
                   }
                   return (
-                    <Marker onPress={() => {navigation.navigate('scrollView', { cluster: cluster.geopics, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: cluster.location.coordinates[1], longitude: cluster.location.coordinates[0] }} >
+                    <Marker key={index} onPress={() => {navigation.navigate('scrollView', { cluster: cluster.geopics, sheetRef: sheetRef, setComments: setComments, setCurrentGeopic: setCurrentGeopic })}} key={index} coordinate={{ latitude: cluster.location.coordinates[1], longitude: cluster.location.coordinates[0] }} >
                       <Cluster color="red" numberOfGeopics={cluster.numberOfGeopics} />
                     </Marker>
                   )

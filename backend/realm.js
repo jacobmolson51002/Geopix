@@ -1,7 +1,7 @@
 import { Realm } from '@realm/react';
-import { userSchema , viewedSchema, Conversation, Message} from './schemas';
+import { userSchema , viewedSchema, Conversation, Message, Request} from './schemas';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUserId, setGeopics, setClusters, addGeopic, addCluster, updateGeopic } from '../redux/actions';
+import { setUserId, setGeopics, setClusters, addGeopic, addCluster, updateGeopic, setRequests } from '../redux/actions';
 import { useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setLocation } from './location';
@@ -52,7 +52,7 @@ export const openUserRealm = async (dispatch, register, login, userID, username,
     type: "openImmediately",
   }
   const configuration = {
-    schema: [userSchema, Conversation],// add multiple schemas, comma seperated.
+    schema: [userSchema, Conversation, Request],// add multiple schemas, comma seperated.
     sync: {
       user: app.currentUser, // loggedIn User
       partitionValue: `${userID}`,
@@ -93,17 +93,20 @@ export const openUserRealm = async (dispatch, register, login, userID, username,
     }
 
     const conversations = await realm.objects('conversations');
+    const requests = await realm.objects('requests');
 
 
 
     //let sortedConversations = await sortByTime(conversations);
 
     dispatch(setMessageData(conversations));
+    dispatch(setRequests(requests));
 
     let unreadCount = 0;
     conversations.map((conversation) => {
       unreadCount += conversation.unread;
     });
+    unreadCount += requests.length;
     console.log(`unread count: ${unreadCount}`);
 
     dispatch(setUnreadCount(unreadCount));
@@ -116,7 +119,17 @@ export const openUserRealm = async (dispatch, register, login, userID, username,
         conversations.map((conversation) => {
           unreadCount += conversation.unread;
         });
+        console.log(`unread count: ${unreadCount}`);
+        dispatch(setUnreadCount(unreadCount));
+      });
+      requests.addListener(() => {
+        dispatch(setRequests(requests));
 
+        let unreadCount = 0;
+        conversations.map((conversation) => {
+          unreadCount += conversation.unread;
+        });
+        unreadCount += requests.length;
         console.log(`unread count: ${unreadCount}`);
         dispatch(setUnreadCount(unreadCount));
       })
@@ -359,6 +372,54 @@ export const sendMessage = (message, realm, userRealm, conversationID, conversat
     currentConversation.lastMessageTimestamp = `${messageTimeStamp}`;
   })
   updateRecipientConversation(message, userID, messageTimeStamp, conversationID, recipients);
+}
+
+export const addNewFriend = async (realm, userID, currentID) => {
+  const user = await realm.objectForPrimaryKey('info', ObjectId(currentID));
+  const newFriends = await user.friends;
+  newFriends.push(`${userID} friend`);
+  realm.write(async () => {
+    user.friends = newFriends;
+  })
+}
+
+export const addPendingFriend = async (realm, userID, currentID) => {
+  realm.write(() => {
+    const user = realm.objectForPrimaryKey('info', ObjectId(currentID));
+    if(user.friends === null){
+      const newFriends = [];
+      newFriends.push(`${userID} pending`);
+      user.friends = newFriends;
+    }else{
+      const currentFriends = user.friends;
+      currentFriends.push(`${userID} pending`);
+      user.friends = currentFriends;
+    }
+  })
+}
+
+export const checkFriendStatus = async (realm, userID) => {
+    const currentUser = await AsyncStorage.getItem('userID');
+    console.log(currentUser);
+    const user = await realm.objectForPrimaryKey('info', ObjectId(currentUser));
+    console.log(user);
+    let status = 'none';
+    if(user.friends === null){
+      console.log('dont know')
+    }else{
+      user.friends.map((friend) => {
+        const friendArray = friend.split(' ');
+        console.log(friendArray);
+        if(friendArray[0] === userID){
+          console.log('yup')
+          status = friendArray[1];
+        }
+      })
+    }
+
+    return status;
+
+    
 }
 
 /*

@@ -9,7 +9,7 @@ import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as Location from 'expo-location';
 import { setCurrentLocation } from '../redux/actions';
-import { app, getViewedGeopicsList } from './realm';
+import { app, getViewedGeopicsList, addNewFriend, addPendingFriend } from './realm';
 import {ObjectId} from 'bson';
 
 //export const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
@@ -33,6 +33,7 @@ const firebaseConfig = {
   const storage = getStorage(firebaseApp);
 
 export const getGeopics = async () => {
+    console.log('getGeopics');
     const dispatch = useDispatch();
     useEffect(() => {
       (async () => {
@@ -54,7 +55,7 @@ export const getGeopics = async () => {
 
           //query for geopics
           const geopics = mongodb.db('geopics').collection('public');
-          const nearbyGeopics = await geopics.find({clustered: false, "location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
+          const nearbyGeopics = await geopics.find({clustered: false, "location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 4830}}});
           const viewedGeopicsList = await getViewedGeopicsList(nearbyGeopics);
           geopicsToDisplay = [];
           viewedGeopicsList.map((geopic) => {
@@ -67,7 +68,7 @@ export const getGeopics = async () => {
           //viewedGeopicsList.reverse();
           //query for clusters
           const clusters = mongodb.db('geopics').collection('clusters');
-          const nearbyClusters = await clusters.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 11270}}});
+          const nearbyClusters = await clusters.find({"location": { $near: { $geometry: { type: "Point", coordinates: [location.coords.longitude, location.coords.latitude] }, $maxDistance: 4830}}});
           nearbyClusters.map(async (cluster, index) => {
               const geopicsInCluster = await geopics.find({clusterID: cluster._id})
               const viewedGeopicsInCluster = await getViewedGeopicsList(geopicsInCluster).then((data) => {
@@ -107,6 +108,7 @@ export const getGeopics = async () => {
 }
 
 export const deleteManyGeopics = async () => {
+  console.log('deleteManyGeopics');
   const mongodb = app.currentUser.mongoClient('mongodb-atlas');
   const geopics = mongodb.db('geopics').collection('public');
 
@@ -115,6 +117,7 @@ export const deleteManyGeopics = async () => {
 }
 
 export const uploadManyGeopics = async (location, num) => {
+  console.log('uploadManyGeopics');
   //connect to databse with credentials
   const mongodb = app.currentUser.mongoClient('mongodb-atlas');
 
@@ -250,6 +253,7 @@ export const uploadManyGeopics = async (location, num) => {
 
 //function to write a geopic to mongo
 export const geopicUploadMongo = async (queryString, dispatch, dispatchData, url, location) => {
+  console.log('geopicUploadMongo');
   //connect to databse with credentials
   const mongodb = app.currentUser.mongoClient('mongodb-atlas');
   //access the geopics collection
@@ -285,6 +289,7 @@ export const geopicUploadMongo = async (queryString, dispatch, dispatchData, url
           cluster.geopics.push(queryString, nearbyGeopics[0]);
         }
       });
+      console.log('clusters set');
       dispatch(setClusters(newDispatchClusters));
 
       newDispatchGeopics = dispatchData.geopics;
@@ -296,7 +301,9 @@ export const geopicUploadMongo = async (queryString, dispatch, dispatchData, url
         }
       });
 
+      console.log('geopics set');
       dispatch(setGeopics(newDispatchGeopics));
+      console.log('addGeopic called');
       dispatch(addGeopic(queryString));
 
     }else{
@@ -373,7 +380,7 @@ export const geopicUploadMongo = async (queryString, dispatch, dispatchData, url
     });
     dispatch(setClusters(newDispatchClusters));
 
-    dispatch(addGeopic(queryString));
+    //dispatch(addGeopic(queryString));
 
   } else{
     console.log("doing the normal thing");
@@ -389,50 +396,56 @@ export const geopicUploadMongo = async (queryString, dispatch, dispatchData, url
   //console.log(upload);
 }
 
+export const getPic = async (url) => {
+  const blob = await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+
+    // on load
+    xhr.onload = function () {
+      resolve(xhr.response);
+  };
+      // on error
+      xhr.onerror = function (e) {
+      console.log(e);
+      reject(new TypeError("Network request failed"));
+  };
+      // on complete
+      xhr.responseType = "blob";
+      xhr.open("GET", url, true);
+      xhr.send(null);
+  });
+  
+  //create the storage url for firebase storage
+  const storageUrl = userID + '/' + currentTime;
+
+  //define the storage reference
+  const storageRef = ref(storage, storageUrl);
+
+  //upload the pic to firebase storage
+  await uploadBytes(storageRef, blob).then((snapshot) => {
+    console.log('succesfully uploaded pic');
+  });
+
+  await blob.close();
+
+  const result = await getDownloadURL(storageRef);
+
+  return result;
+
+  //close the blob
+  
+}
+
 export const geopicUpload = async (geopicInfo, userReducer, dispatch, dispatchData) => {
+      console.log('geopicUpload');
 
       //get current time
       let currentTime = new Date();
 
       //initialize firebase and firebase storage
       const userID = await AsyncStorage.getItem('userID');
-      
-      
-  
-      //create new blob to upload pic
-      const blob = await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-    
-        // on load
-        xhr.onload = function () {
-          resolve(xhr.response);
-      };
-          // on error
-          xhr.onerror = function (e) {
-          console.log(e);
-          reject(new TypeError("Network request failed"));
-      };
-          // on complete
-          xhr.responseType = "blob";
-          xhr.open("GET", geopicInfo.url, true);
-          xhr.send(null);
-      });
-      
-      //create the storage url for firebase storage
-      const storageUrl = userID + '/' + currentTime;
 
-      //define the storage reference
-      const storageRef = ref(storage, storageUrl);
-  
-      //upload the pic to firebase storage
-      await uploadBytes(storageRef, blob).then((snapshot) => {
-        console.log('succesfully uploaded pic');
-      });
-
-      const result = await getDownloadURL(storageRef);
-
-      //close the blob
-      await blob.close();
+      const result = await getPic(geopicInfo.url);
 
       console.log(currentTime);
 
@@ -464,6 +477,7 @@ export const geopicUpload = async (geopicInfo, userReducer, dispatch, dispatchDa
 }
 
 export const openRealm = async () => {
+    console.log('openRealm');
     const partition = app.currentUser.id;
     const config = {
       schema: [userSchema],
@@ -493,6 +507,7 @@ export const openRealm = async () => {
 }
 
 export const hideGeopic = async (geopic) => {
+  console.log('hideGeopics');
   const mongodb = app.currentUser.mongoClient('mongodb-atlas');
   //access the geopics collection
   const geopics = mongodb.db('geopics').collection('public');
@@ -500,6 +515,7 @@ export const hideGeopic = async (geopic) => {
 }
 
 export const getComments = async (id) => {
+  console.log('getComments');
   const mongodb = app.currentUser.mongoClient('mongodb-atlas');
   const allComments = mongodb.db('geopics').collection('comments');
   const comments = await allComments.find({geopicID: id});
@@ -508,7 +524,7 @@ export const getComments = async (id) => {
 }
 
 export const addComment = async (commentToAdd, geopic) => {
-  const mongodb = app.currentUser.mongoClient('mongodb-atlas');
+  console.log('addComment');
   const allComments = mongodb.db('geopics').collection('comments');
   const geopics = mongodb.db('geopics').collection('public');
 
@@ -520,31 +536,40 @@ export const addComment = async (commentToAdd, geopic) => {
   return commentToAdd
 }
 
+export const deleteComments = async () => {
+  const allComments = mongodb.db('geopics').collection('comments');
+  await allComments.deleteMany({username: 'jacobmolson'});
+
+}
+
 export const vote = async (object, vote) => {
+  console.log('vote');
+  console.log(object.votes);
+  console.log(vote);
   let connection;
   const users = mongodb.db('users').collection('info');
   if(object.pic != null){
     connection = mongodb.db('geopics').collection('public');
     let newVotes = object.votes;
-    if(vote === 1){
-        newVotes[0] = newVotes[0]+1;
-        newVotes[2] = newVotes[2]+1;
+    if(vote > 0){
+        newVotes[0] = newVotes[0]+vote;
+        newVotes[2] = newVotes[2]+vote;
         await connection.updateOne({_id: object._id}, {$set: {votes: newVotes}});
     }else{
-        newVotes[1] = newVotes[0]+1;
-        newVotes[2] = newVotes[2]-1;
+        newVotes[1] = newVotes[0]+vote;
+        newVotes[2] = newVotes[2]-vote;
         await connection.updateOne({_id: object._id}, {$set: {votes: newVotes}});
     }
   }else{
     connection = mongodb.db('geopics').collection('comments');
     let newVotes = object.votes;
-    if(vote === 1){
-        newVotes[0] = newVotes[0]+1;
-        newVotes[2] = newVotes[2]+1;
+    if(vote > 0){
+        newVotes[0] = newVotes[0]+vote;
+        newVotes[2] = newVotes[2]+vote;
         await connection.updateOne({_id: object._id}, {$set: {votes: newVotes}});
     }else{
-        newVotes[1] = newVotes[0]+1;
-        newVotes[2] = newVotes[2]-1;
+        newVotes[1] = newVotes[1]+vote;
+        newVotes[2] = newVotes[2]+vote;
         await connection.updateOne({_id: object._id}, {$set: {votes: newVotes}});
     }
   }
@@ -553,6 +578,7 @@ export const vote = async (object, vote) => {
 }
 
 export const getTime = (timestamp) => {
+  console.log('getTime');
   const currentDateTime = new Date();
   const geopicDateTime = new Date(timestamp);
   const timeDifference = currentDateTime.getTime() - geopicDateTime.getTime();
@@ -578,6 +604,7 @@ export const getTime = (timestamp) => {
 }
 
 export const greaterThan3Days = (timestamp) => {
+  console.log('greaterThan30Days');
   const currentTime = new Date();
   const geopicTime = new Date(timestamp);
   const timeDifference = currentTime.getTime() - geopicTime.getTime();
@@ -590,18 +617,18 @@ export const greaterThan3Days = (timestamp) => {
 }
 
 export const getUser = async (userID) => {
+  console.log('getUser');
   const users = mongodb.db('users').collection('info');
   const userInfo = await users.findOne({_partition: userID});
   return userInfo
 }
 
 export const getUserInformation = async (userID) => {
+  console.log('getUserInformation');
   let userInformation = {};
-  const users = mongodb.db('users').collection('info');
   const geopics = mongodb.db('geopics').collection('public');
   const comments = mongodb.db('geopics').collection('comments');
 
-  const userInfo = await users.findOne({_partition: userID});
   const userGeopics = await geopics.find({userID: userID});
   const userComments = await comments.find({userID: userID});
   let contentArray = await userGeopics.concat(userComments);
@@ -616,13 +643,11 @@ export const getUserInformation = async (userID) => {
     }
     return 0;
   });
-  userInformation.geocash = await userInfo.geocash;
-  userInformation.content = await contentArray;
-  userInformation.username = await userInfo.username;
-  return userInformation
+  return contentArray
 }
 
 export const updateRecipientConversation = async (message, userID, lastMessageTimestamp, conversationID, recipients) => {
+  console.log('updateRecipientConversation');
   console.log(conversationID);
   const users = mongodb.db('users').collection('conversations');
   if(recipients.length == 1){
@@ -637,6 +662,7 @@ export const updateRecipientConversation = async (message, userID, lastMessageTi
 };
 
 export const sendPushNotification = async (expoPushToken) => {
+  console.log('sendPushNotification');
   const message = {
     to: expoPushToken,
     sound: 'default',
@@ -657,7 +683,7 @@ export const sendPushNotification = async (expoPushToken) => {
 }
 
 export const sendVerificationText = async (number) => {
-
+  console.log('sendVerificationText');
   const code = await fetch('https://geopix-295e8.web.app/', {
     method: 'GET',
     headers: {
@@ -671,6 +697,7 @@ export const sendVerificationText = async (number) => {
 }
 
 export const checkUsername = async (credential, username) => {
+  console.log('checkUsername');
   const users = mongodb.db('users').collection('info');
   let check;
   if(username){
@@ -689,4 +716,93 @@ export const checkUsername = async (credential, username) => {
     }
   }
 
+}
+
+export const addFriend = async (userID) => {
+    const requests = mongodb.db('users').collection('requests');
+    const users = mongodb.db('users').collection('info');
+    const currentID = await AsyncStorage.getItem('userID');
+    console.log(currentID);
+    const currentTime = new Date();
+    await requests.insertOne({
+      _id: new ObjectId(),
+      _partition: `${userID}`,
+      userID: currentID,
+      timestamp: `${currentTime}`
+    });
+
+    users.findOne({_partition: currentID}).then(async (currentUser) => {
+      let newFriends;
+      if(currentUser.friends == null){
+        newFriends = [];
+        newFriends.push(`${userID} pending`)
+        await users.updateOne({_partition: currentID}, {$set: {friends: newFriends}});
+      }else{
+        newFriends = currentUser.friends;
+        newFriends.push(`${userID} pending`)
+        await users.updateOne({_partition: currentID}, {$set: {friends: newFriends}});
+      }
+    });
+
+    //addPendingFriend(realm, userID, currentID);
+
+}
+
+export const acceptRequest = async (userID) => {
+    const currentUser = await AsyncStorage.getItem('userID');
+
+    const requests = mongodb.db('users').collection('requests');
+    const users = mongodb.db('users').collection('info');
+
+    
+    await requests.deleteOne({_partition: currentUser, userID: userID});
+
+    const findUser = await users.findOne({_partition: userID});
+    const userFriendList = findUser.friends;
+
+    let newFriends = [];
+    userFriendList.map((friend) => {
+      if(friend === `${currentUser} pending`){
+        newFriends.push(`${currentUser} friend`);
+      }else{
+        newFriends.push(friend);
+      }
+    })
+    
+    await users.updateOne({_partition: userID}, {$set: {friends: newFriends}});
+
+    const findCurrentUser = await users.findOne({_partition: currentUser});
+    const friends = findCurrentUser.friends;
+    let addFriend;
+    if(friends == null){
+      console.log('empty');
+      addFriend = [];
+      addFriend.push(`${userID} friend`);
+      await users.updateOne({_partition: currentUser}, {$set: {friends: addFriend}});
+    }else{
+      console.log('not empty');
+      addFriend = friends;
+      addFriend.push(`${userID} friend`);
+      await users.updateOne({_partition: currentUser}, {$set: {friends: addFriend}});
+    }
+    
+
+    //addNewFriend(realm, userID, currentUser);
+
+}
+
+export const declineRequest = async (userID) => {
+    const requests = mongodb.db('users').collection('requests');
+    await requests.deleteOne({_partition: currentUser, userID: userID});
+
+    const currentID = await AsyncStorage.getItem('userID');
+    const users = mongodb.db('users').collection('users');
+    const user = users.findOne({_partition: userID});
+    const newFriends = [];
+    user.friends.map((friend) => {
+      if(friend !== `${currentID} pending`){
+        newFriends.push(friend);
+      }
+    });
+    await users.updateOne({_partition: userID}, {$set: {friends: newFriends}});
 }

@@ -1,4 +1,4 @@
-import { CURRENT_LOCATION, SET_MESSAGE_DATA, SET_UNREAD_COUNT, USER_ID, SET_GEOPICS, ADD_GEOPIC, SET_CLUSTERS, ADD_CLUSTER, UPDATE_GEOPIC, SET_USER_REALM, SET_MESSAGES_REALM, SET_CURRENT_CONVERSATION } from './actions';
+import { CURRENT_LOCATION, SET_MESSAGE_DATA, SET_REQUESTS, SET_UNREAD_COUNT, USER_ID, SET_GEOPICS, ADD_GEOPIC, SET_CLUSTERS, ADD_CLUSTER, UPDATE_GEOPIC, SET_USER_REALM, SET_MESSAGES_REALM, SET_CURRENT_CONVERSATION } from './actions';
 
 const initializeUserState = {
     userID: 'this is something',
@@ -7,6 +7,7 @@ const initializeUserState = {
         longitude: 0
     },
     conversations: [],
+    requests: [],
     unreadCount: 0,
     userRealm: null,
     messagesRealm: null,
@@ -23,6 +24,8 @@ export function userReducer(state = initializeUserState, action){
     switch(action.type){
         case SET_MESSAGE_DATA:
             return {...state, conversations: action.payload};
+        case SET_REQUESTS:
+            return {...state, requests: action.payload}
         case SET_UNREAD_COUNT:
             return {...state, unreadCount: action.payload};
         case USER_ID:

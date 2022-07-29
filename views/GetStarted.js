@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Dimensions, Text, View, Button, TextInput, TouchableOpacity, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, KeyboardAvoidingView, Switch } from 'react-native';
-import { sendVerificationText, checkUsername } from '../backend/database';
+import { ImageBackground, Dimensions, Text, View, Button, TextInput, TouchableOpacity, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, KeyboardAvoidingView, Switch } from 'react-native';
+import { sendVerificationText, checkUsername, getPic } from '../backend/database';
 import { openUserRealm } from '../backend/realm';
 import { useSelector, useDispatch } from 'react-redux';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
@@ -420,7 +420,7 @@ export const Password = ({setPassword}) => {
         if(usersPassword === confirmPassword){
             setPassword(usersPassword)
             setConfirmed(true);
-            navigation.navigate('permissions');
+            navigation.navigate('statusPic');
         }else{
             setButtonClicked(false);
             setDontMatch(true);
@@ -583,13 +583,12 @@ export const Password = ({setPassword}) => {
     )
 }
 
-export const Permissions = ({ phoneNumber, username, password }) => {
+export const Permissions = ({ phoneNumber, username, password, statusPic }) => {
 
     const navigation = useNavigation();
     const dispatch = useDispatch();
     const [buttonClicked, setButtonClicked] = useState(false);
     const [location, setLocation] = useState(false);
-    const [camera, setCamera] = useState(false);
     const [notifications, setNotifications] = useState(false);
     
     const locationPermissions = async () => {
@@ -598,15 +597,6 @@ export const Permissions = ({ phoneNumber, username, password }) => {
             setLocation(false);
         }else{
             setLocation(true);
-        }
-    }
-
-    const cameraPermissions = async () => {
-        const { status } = await Camera.requestCameraPermissionsAsync();
-        if(status != 'granted'){
-            setCamera(false);
-        }{
-            setCamera(true);
         }
     }
 
@@ -622,8 +612,12 @@ export const Permissions = ({ phoneNumber, username, password }) => {
     const login = async () => {
         phoneNumber = phoneNumber.replace(/-/g, '');
         const newNumber = parseInt(phoneNumber);
-        await openUserRealm(dispatch, true, false, '', username, password, newNumber).then(() => {
-            navigation.navigate('AppContainer');
+        const pic = await getPic(statusPic);
+        await openUserRealm(dispatch, true, false, '', username, password, newNumber, pic).then(() => {
+            navigation.reset({
+                index: 0,
+                routes: [{name: 'AppContainer'}],
+              });
         });
 
     }
@@ -647,7 +641,7 @@ export const Permissions = ({ phoneNumber, username, password }) => {
             alignItems: 'center'
         },
         loginButton: {
-            backgroundColor: (location && camera) ? 'turquoise' : '#5C5B57',
+            backgroundColor: location ? 'turquoise' : '#5C5B57',
             padding: 14,
             fontSize: 18,
             color: '#222222',
@@ -718,20 +712,206 @@ export const Permissions = ({ phoneNumber, username, password }) => {
                     <Switch value={location} onValueChange={locationPermissions}></Switch>
                 </View>
                 <View style={styles.option}>
-                    <Text style={styles.permissionPrompt}>Camera</Text>
-                    <Text style={styles.permissionsSubheader}>(to post cool geopics!)</Text>
-                    <Switch value={camera} onValueChange={cameraPermissions}></Switch>
-                </View>
-                <View style={styles.option}>
                     <Text style={styles.permissionPrompt}>Notifications</Text>
                     <Text style={styles.permissionsSubheader}>(to stay in the loop!)</Text>
                     <Switch value={notifications} onValueChange={notificationPermissions}></Switch>
                 </View>
             </View>
             <View style={styles.button}>
-                <TouchableOpacity disabled={(location && camera) ? false : true} style={styles.loginButton} onPress={login} >
+                <TouchableOpacity disabled={location ? false : true} style={styles.loginButton} onPress={login} >
                     {buttonClicked === false ? (
                     <Text style={{ color: '#222222', fontSize: 18, fontWeight: 'bold' }}>Jump in</Text>
+                    ) : (
+                    <ActivityIndicator size='small' color="#222222" />
+                    )}
+                </TouchableOpacity>
+            </View>
+        </View>
+    )
+}
+
+export const StatusPic = ({ setStatusPic }) => {
+
+    const navigation = useNavigation();
+    const dispatch = useDispatch();
+    const [useCamera, setUseCamera] = useState(false);
+    const [buttonClicked, setButtonClicked] = useState(false);
+    const [picTaken, setPicTaken] = useState(false);
+    const [localPic, setLocalPic] = useState('');
+
+    const cameraPermissions = async () => {
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        if(status != 'granted'){
+            setUseCamera(false);
+        }{
+            setUseCamera(true);
+        }
+    }
+
+    const takePic = async () => {
+        const pic = await camera.takePictureAsync({quality: 0.5});
+        setStatusPic(pic.uri);
+        setLocalPic(pic.uri);
+        setPicTaken(true);
+    }
+
+
+
+
+    const styles = {
+        wrapper: {
+            flex: 1,
+            backgroundColor: "#222222",
+            justiftyContent: 'center',
+            alignItems: 'center',
+            display: 'flex',
+            paddingTop: 50
+        },
+        button: {
+            width: '100%',
+            position: 'absolute',
+            bottom: 40,
+            display: 'flex',
+            justiftyContent: 'center',
+            alignItems: 'center'
+        },
+        loginButton: {
+            backgroundColor: picTaken ? 'turquoise' : '#5C5B57',
+            padding: 14,
+            fontSize: 18,
+            color: '#222222',
+            borderRadius: 10,
+            display: 'flex',
+            justiftyContent: 'center',
+            alignItems: 'center',
+            width: '90%',
+            marginTop: 20,
+            marginLeft: '30%',
+            position: 'absolute',
+            bottom: 0
+        },
+        header: {
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        text: {
+            color: 'white',
+            fontSize: 30,
+            fontWeight: 'bold'
+        },
+        subHeader: {
+            fontSize: 15,
+            color: 'white',
+            marginTop: 30
+        },
+        cameraView: {
+            marginTop: 50,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '80%',
+            borderRadius: 20,
+            height: '60%',
+            overflow: 'hidden'
+        },
+        cameraHidden: {
+            flex: 1,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'black',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems:'center'
+        },
+        takePic: {
+            width: 200,
+            padding: 14,
+            borderRadius: 10,
+            backgroundColor: '#bebebe',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+        },
+        option: {
+            width: '40%',
+            marginBottom: 50,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+        },
+        permissionPrompt: {
+            color: 'white',
+            fontSize: 17,
+            fontWeight: 'bold',
+            marginBottom: 3,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+        },
+        permissionsSubheader: {
+            color:'white',
+            fontSize: 12,
+            marginBottom: 10
+        },
+        capture: {
+            borderWidth: 4,
+            width: 60,
+            height: 60,
+            borderColor: 'white',
+            borderRadius: 60,
+
+        },
+        retake: {
+            position: 'absolute',
+            top: 20,
+            left: 20
+        }
+    }
+    return(
+        <View style={styles.wrapper}>
+            <View style={styles.header}>
+                <Text style={styles.text}>Great now let's setup</Text>
+                <Text style={styles.subHeader}>Take a status pic to display on your profile</Text>
+                <Text style={styles.subHeader}>(it can be changed at any time)</Text>
+            </View>
+            <View style={styles.cameraView}>
+                {useCamera === false ? (
+                    <View style={styles.cameraHidden}>
+                        <TouchableOpacity style={styles.takePic} onPress={cameraPermissions}>
+                            <Text style={{ color: 'white' }}>Take Pic</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : picTaken === false ? (
+                    <View style={{ flex: 1, width: '100%', height: '100%' }}>
+                        <Camera  style={{ flex: 1, width: '100%', height: '100%' }}
+                        ref={(r) => {
+                            camera = r
+                        }}>
+                        </Camera>
+                        <View style={{ width: '100%', position: 'absolute', bottom: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <TouchableOpacity onPress={takePic} style={styles.capture} />
+                        </View>
+                    </View>
+                ) : (
+                    <View style={{ flex: 1, width: '100%', height: '100%' }}>
+                        <ImageBackground
+                            source={{uri: localPic}}
+                            style={{
+                                flex: 1, width: '100%', height: '100%'
+                            }}
+                        />
+                        <TouchableOpacity onPress={() => {setPicTaken(false)}} style={styles.retake}>
+                            <Text style={{ color:'white', fontSize: 30 }}>x</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+            </View>
+            <View style={styles.button}>
+                <TouchableOpacity  disabled={picTaken ? false : true} style={styles.loginButton} onPress={() => {navigation.navigate('permissions')}} >
+                    {buttonClicked === false ? (
+                    <Text style={{ color: '#222222', fontSize: 18, fontWeight: 'bold' }}>Continue</Text>
                     ) : (
                     <ActivityIndicator size='small' color="#222222" />
                     )}
@@ -746,6 +926,7 @@ export const GetStarted = ({navigation}) => {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [statusPic, setStatusPic] = useState('');
 
     const styles = {
         wrapper: {
@@ -766,11 +947,12 @@ export const GetStarted = ({navigation}) => {
     }
     return(
         <View style={styles.wrapper}>
-            <Stack.Navigator screenOptions={{ animation: 'none', headerShown: false }} initialRouteName="textVerification" >
+            <Stack.Navigator screenOptions={{ animation: 'none', headerShown: false }} initialRouteName="statusPic" >
                 <Stack.Screen name="textVerification" children={() => <TextVerification setPhoneNumber={setPhoneNumber} />} />
                 <Stack.Screen name="username" children={() => <Username setUsername={setUsername} />}/>
                 <Stack.Screen name="password" children={() => <Password  setPassword={setPassword} />}/>
-                <Stack.Screen name="permissions" children={() => <Permissions phoneNumber={phoneNumber} username={username} password={password} /> }/>
+                <Stack.Screen name="statusPic" children={() => <StatusPic setStatusPic={setStatusPic} /> } /> 
+                <Stack.Screen name="permissions" children={() => <Permissions phoneNumber={phoneNumber} username={username} password={password} statusPic={statusPic} /> }/>
             </Stack.Navigator>
         </View>
     )

@@ -9,6 +9,7 @@ import {SYNC_CONFIG} from './sync.config';
 import { Map } from './views/Map';
 //import {CameraView} from './views/CameraView';
 import { AppContainer } from './AppContainer'; 
+import { ProfileView } from './views/ProfileView';
 //import {View, Text} from 'react-native';
 import {Provider} from 'react-redux';
 import {Store} from './redux/store';
@@ -109,6 +110,7 @@ const App = () => {
                     <Stack.Screen name="Login" component={Login} />
                     <Stack.Screen name="Start" component={Start} />
                     <Stack.Screen name="GetStarted" component={GetStarted} />
+                    <Stack.Screen name="ProfileView" component={ProfileView} />
                 </Stack.Navigator>
                 
             </NavigationContainer> 
