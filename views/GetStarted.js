@@ -612,8 +612,7 @@ export const Permissions = ({ phoneNumber, username, password, statusPic }) => {
     const login = async () => {
         phoneNumber = phoneNumber.replace(/-/g, '');
         const newNumber = parseInt(phoneNumber);
-        const pic = await getPic(statusPic);
-        await openUserRealm(dispatch, true, false, '', username, password, newNumber, pic).then(() => {
+        await openUserRealm(dispatch, true, false, '', username, password, newNumber, statusPic).then(() => {
             navigation.reset({
                 index: 0,
                 routes: [{name: 'AppContainer'}],
@@ -947,7 +946,7 @@ export const GetStarted = ({navigation}) => {
     }
     return(
         <View style={styles.wrapper}>
-            <Stack.Navigator screenOptions={{ animation: 'none', headerShown: false }} initialRouteName="statusPic" >
+            <Stack.Navigator screenOptions={{ animation: 'none', headerShown: false }} initialRouteName="textVerification" >
                 <Stack.Screen name="textVerification" children={() => <TextVerification setPhoneNumber={setPhoneNumber} />} />
                 <Stack.Screen name="username" children={() => <Username setUsername={setUsername} />}/>
                 <Stack.Screen name="password" children={() => <Password  setPassword={setPassword} />}/>

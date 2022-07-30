@@ -396,7 +396,8 @@ export const geopicUploadMongo = async (queryString, dispatch, dispatchData, url
   //console.log(upload);
 }
 
-export const getPic = async (url) => {
+export const getPic = async (url, userID) => {
+  let currentTime = new Date();
   const blob = await new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
@@ -445,7 +446,7 @@ export const geopicUpload = async (geopicInfo, userReducer, dispatch, dispatchDa
       //initialize firebase and firebase storage
       const userID = await AsyncStorage.getItem('userID');
 
-      const result = await getPic(geopicInfo.url);
+      const result = await getPic(geopicInfo.url, userID);
 
       console.log(currentTime);
 

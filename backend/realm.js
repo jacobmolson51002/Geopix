@@ -42,7 +42,7 @@ const sortByTime = (conversations) => {
   return SortedConversations;
 }
 
-export const openUserRealm = async (dispatch, register, login, userID, username, password, phoneNumber) => {
+export const openUserRealm = async (dispatch, register, login, userID, username, password, phoneNumber, statusPic) => {
   if(register){
     userID = new ObjectId();
   }
@@ -66,6 +66,8 @@ export const openUserRealm = async (dispatch, register, login, userID, username,
 
     if(register){
       realm.write(async () => {
+        const pic = await getPic(statusPic, userID);
+        const date = new Date();
         realm.create('info', {
           _id: userID,
           _partition: `${userID}`,
@@ -77,8 +79,10 @@ export const openUserRealm = async (dispatch, register, login, userID, username,
           commented: [],
           downvoted: [],
           upvoted: [],
-          lastLoggedIn: `${new Date()}`,
-          lastLoggedOut: ''
+          lastLoggedIn: `${date}`,
+          lastLoggedOut: '',
+          statusPic: pic,
+          usernameLastChanged: `${date}`
         });
       });
       await AsyncStorage.setItem('userID', `${userID}`);
