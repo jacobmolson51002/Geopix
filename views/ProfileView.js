@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, TouchableOpacity, Text, View, Button, TextInput, ActivityIndicator } from 'react-native';
+import { ImageBackground, ScrollView, TouchableOpacity, Text, View, Button, TextInput, ActivityIndicator } from 'react-native';
 import { getUserInformation, getUser, addFriend } from '../backend/database';
 import { checkFriendStatus } from '../backend/realm';
 import { useSelector } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CachedImage from 'react-native-expo-cached-image';
 
 
 export const ProfileView = ({ navigation, route }) => {
@@ -29,11 +30,6 @@ export const ProfileView = ({ navigation, route }) => {
         });
 
     }
-    const loadHistory = () => {
-        getUserInformation(userID).then((userHistory) => {
-            setHistory(userHistory);
-        })
-    }
 
     const messageUser = async () => {
         const currentUser = await AsyncStorage.getItem('userID');
@@ -53,13 +49,6 @@ export const ProfileView = ({ navigation, route }) => {
         }
         
     }
-    const viewGeopic = () => {
-        console.log('heres teh geopic');
-    }
-
-    const viewComment = () => {
-        console.log('heres teh comment');
-    }
 
     const addFriendClicked = () => {
         addFriend(userID);
@@ -78,17 +67,13 @@ export const ProfileView = ({ navigation, route }) => {
             display: 'flex',
             justiftyContent: 'center',
             alignItems: 'center',
-            paddingTop: 100
+            paddingTop: 75
         },
         geocashDisplay: {
-            width: 90,
-            height: 90,
-            borderRadius: 50,
-            borderWidth: 1.5,
-            borderColor: 'white',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
+            marginTop: 20,
+            justiftyContent: 'center',
+            alignItems: 'center',
+            display: 'flex'
         },
         username: {
             marginTop: 20,
@@ -97,15 +82,16 @@ export const ProfileView = ({ navigation, route }) => {
             fontSize: 30
         },
         geocash: {
-            color: 'turquoise',
-            fontSize: 20,
+            color: 'white',
+            fontSize: 30,
+            fontWeight: 'bold'
         },
         buttons: {
             width: '60%',
             marginTop: 26
         },
         messageUser: {
-            width: '100%',
+            width: '48%',
             padding: 9,
             borderRadius: 12,
             backgroundColor: 'turquoise',
@@ -139,15 +125,6 @@ export const ProfileView = ({ navigation, route }) => {
             alignItems: 'center',
             marginRight: '4%'
         },
-        report: {
-            width: '48%',
-            padding: 9,
-            borderRadius: 12,
-            backgroundColor: 'red',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-        },
         historyContainer: {
             marginTop: 50,
             width: '80%',
@@ -164,21 +141,30 @@ export const ProfileView = ({ navigation, route }) => {
         },
         minus: {
             color: 'red'
+        },
+        statusPic: {
+            marginTop: 30,
+            width: '80%',
+            height: '65%',
+            borderRadius: 20,
+            overflow: 'hidden',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        image: {
+            width: '100%',
+            height: '100%',
+            flex: 1
         }
     }
 
     return infoReady ? (
         <View style={styles.wrapper}>
-            <View style={styles.geocashDisplay}>
-                <Text style={styles.geocash}>{userInformation.geocash}</Text>
-            </View>
             <Text style={styles.username}>
                 {userInformation.username}
             </Text>
             <View style={styles.buttons}>
-                <TouchableOpacity onPress={messageUser} style={styles.messageUser} >
-                    <Text style={{ color: '#222222', fontSize: 20, fontWeight: 'bold'}}>message</Text>
-                </TouchableOpacity>
                 <View style={styles.inlineButtons}>
                     {status === '' ? (
                         <View style={styles.addFriend} >
@@ -197,29 +183,17 @@ export const ProfileView = ({ navigation, route }) => {
                             <Text style={{ color: "#222222", fontSize: 17, fontWeight:'bold' }}>add friend</Text>
                         </TouchableOpacity>
                     )}
-                    <TouchableOpacity style={styles.report} onPress={report}>
-                        <Text style={{ color: "#222222", fontSize: 17, fontWeight:'bold' }}>report</Text>
+                    <TouchableOpacity style={styles.messageUser} onPress={messageUser}>
+                        <Text style={{ color: "#222222", fontSize: 17, fontWeight:'bold' }}>message</Text>
                     </TouchableOpacity>
                 </View>
+                <View style={styles.geocashDisplay}>
+                    <Text style={{ fontSize: 12, color: '#bebebe' }}>geocash</Text>
+                    <Text style={styles.geocash}>{userInformation.geocash}</Text>
+                </View>
             </View>
-            <View style={styles.historyContainer} onLayout={loadHistory}>
-                {history !== null ? (
-                    <ScrollView style={styles.history}>
-                        {history.map((historyLine, index) => {
-                            return (
-                                <View key={index} style={styles.historyLine}>
-                                    <Text style={{ color:'white', fontSize: 15 }}><Text style={historyLine.votes[2] > 0 ? styles.plus : styles.minus}>{historyLine.votes[2]} </Text>
-                                     from <TouchableOpacity style={{ margin: 0, padding: 0 }} onPress={historyLine.pic !== null ? viewGeopic : viewComment}><Text style={{ color: 'turquoise' }}>this </Text></TouchableOpacity>
-                                     {historyLine.pic !== null ? 'geopic.' : 'comment.'}
-                                    </Text>
-                                </View>
-                            )  
-                        })}
-                    </ScrollView>
-                ) : (
-                    <ActivityIndicator color='white' size='small' />
-                )}
-
+            <View style={styles.statusPic}>
+                <CachedImage source={{ uri: userInformation.statusPic }} style={styles.image}/>
             </View>
         </View>
     ) : (

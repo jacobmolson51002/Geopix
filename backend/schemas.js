@@ -27,8 +27,9 @@ export const userSchema = {
             objectType: 'string'
         },
         lastLoggedIn: 'string',
-        lastLoggedOut: 'string'
-
+        lastLoggedOut: 'string',
+        statusPic: 'string',
+        usernameLastChanged: 'string'
     },
     primaryKey: '_id'
 }

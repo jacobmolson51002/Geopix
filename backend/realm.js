@@ -10,7 +10,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as Location from 'expo-location';
 import { setCurrentLocation, setMessageData, setUnreadCount, setUserRealm, setCurrentConversation, setMessagesRealm } from '../redux/actions';
 import {ObjectId} from 'bson';
-import { updateRecipientConversation, getUser } from './database';
+import { updateRecipientConversation, getUser, getPic } from './database';
 
 //initialize realm app
 export const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
@@ -65,35 +65,32 @@ export const openUserRealm = async (dispatch, register, login, userID, username,
     dispatch(setUserRealm(realm));
 
     if(register){
+      const pic = await getPic(statusPic, userID);
+      const date = new Date();
+      const newUser = {
+        _id: userID,
+        _partition: `${userID}`,
+        geocash: 0,
+        username: username,
+        phoneNumber: phoneNumber,
+        expoPushToken: '',
+        password: password,
+        commented: [],
+        downvoted: [],
+        upvoted: [],
+        lastLoggedIn: `${date}`,
+        lastLoggedOut: '',
+        statusPic: pic,
+        usernameLastChanged: `${date}`
+      }
       realm.write(async () => {
-        const pic = await getPic(statusPic, userID);
-        const date = new Date();
-        realm.create('info', {
-          _id: userID,
-          _partition: `${userID}`,
-          geocash: 0,
-          username: username,
-          phoneNumber: phoneNumber,
-          expoPushToken: '',
-          password: password,
-          commented: [],
-          downvoted: [],
-          upvoted: [],
-          lastLoggedIn: `${date}`,
-          lastLoggedOut: '',
-          statusPic: pic,
-          usernameLastChanged: `${date}`
-        });
+        realm.create('info', newUser);
       });
       await AsyncStorage.setItem('userID', `${userID}`);
       await AsyncStorage.setItem('username', username);
     }else if(login){
       await AsyncStorage.setItem('userID', userID);
       await AsyncStorage.setItem('username', username);
-      realm.write(async () => {
-        const currentUser = await realm.objectForPrimaryKey('info', ObjectId(userID));
-        currentUser.lastLoggedIn = `${new Date()}`;
-      });
     }
 
     const conversations = await realm.objects('conversations');
@@ -424,6 +421,11 @@ export const checkFriendStatus = async (realm, userID) => {
     return status;
 
     
+}
+
+export const getUserInfo = async (realm, userID) => {
+  const userInfo = await realm.objectForPrimaryKey('info', ObjectId(userID));
+  return userInfo;
 }
 
 /*

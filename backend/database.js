@@ -807,3 +807,27 @@ export const declineRequest = async (userID) => {
     });
     await users.updateOne({_partition: userID}, {$set: {friends: newFriends}});
 }
+
+export const updateUserInformation = async (userID, oldUsername, newUsername, newUrl) => {
+  console.log(userID);
+  console.log(oldUsername);
+  console.log(newUsername);
+  console.log(newUrl);
+    const users = mongodb.db('users').collection('info');
+    if(newUsername == ''){
+      if(newUrl !== ''){
+        console.log('update url');
+        const pic = await getPic(newUrl, userID);
+        await users.updateOne({_partition: userID}, {$set: {statusPic: pic}});
+      }
+    }else{
+      if(newUrl !== ''){
+        console.log('update both');
+        const pic = await getPic(newUrl, userID);
+        await users.updateOne({_partition: userID}, {$set: {statusPic: pic, username: newUsername}});
+      }else{
+        console.log('update username');
+        await users.updateOne({_partition: userID}, {$set: {username: newUsername}});
+      }
+    }
+}
