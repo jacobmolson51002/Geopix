@@ -42,7 +42,7 @@ const sortByTime = (conversations) => {
   return SortedConversations;
 }
 
-export const openUserRealm = async (dispatch, register, login, userID, username, password, phoneNumber, statusPic) => {
+export const openUserRealm = async (dispatch, register, login, userID, expoPushToken, username, password, phoneNumber, statusPic) => {
   if(register){
     userID = new ObjectId();
   }
@@ -73,7 +73,7 @@ export const openUserRealm = async (dispatch, register, login, userID, username,
         geocash: 0,
         username: username,
         phoneNumber: phoneNumber,
-        expoPushToken: '',
+        expoPushToken: expoPushToken,
         password: password,
         commented: [],
         downvoted: [],
@@ -91,6 +91,12 @@ export const openUserRealm = async (dispatch, register, login, userID, username,
     }else if(login){
       await AsyncStorage.setItem('userID', userID);
       await AsyncStorage.setItem('username', username);
+    }
+    const user = realm.objectForPrimaryKey('info', ObjectId(userID));
+    if(user.expoPushToken !== expoPushToken){
+      realm.write(() => {
+        user.expoPushToken = expoPushToken;
+      })
     }
 
     const conversations = await realm.objects('conversations');
@@ -326,7 +332,7 @@ export const sendNewMessage = async (conversationID, timestamp, dispatch, messag
 
 }
 
-export const createNewConversation = async (conversationID, timestamp, userRealm, recipients, message, userID) => {
+export const createNewConversation = async (conversationID, timestamp, userRealm, recipients, usernames, message, userID) => {
   userRealm.write(() => {
     userRealm.create('conversations', {
       _id: new ObjectId(),
@@ -334,6 +340,7 @@ export const createNewConversation = async (conversationID, timestamp, userRealm
       conversationID: `${conversationID}`,
       unread: 0,
       recipients: recipients,
+      usernames: usernames,
       lastMessage: message,
       lastMessageFrom: `${userID}`,
       lastMessageTimestamp: `${timestamp}`,

@@ -29,6 +29,7 @@ export const AppHome = ({ navigation }) => {
     const [comments, setComments] = useState({});
     const [comment, setComment] = useState("");
     const [buttonClicked, setButtonClicked] = useState(false);
+    const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
 
     const Tab = createBottomTabNavigator();
 
@@ -181,7 +182,7 @@ export const AppHome = ({ navigation }) => {
     const focusInput = useRef();
 
     useEffect(() => {
-        if(currentGeopic.comments === 0){
+        if(bottomSheetOpen && currentGeopic.comments === 0){
             focusInput.current.focus();
         }
     });
@@ -289,6 +290,8 @@ export const AppHome = ({ navigation }) => {
                     snapPoints={[0, '70%']}
                     borderRadius={10}
                     renderContent={commentSection}
+                    onCloseStart={() => {Keyboard.dismiss(); setBottomSheetOpen(false)}}
+                    onOpenStart={() => {setBottomSheetOpen(true)}}
                 />
         
         </View>

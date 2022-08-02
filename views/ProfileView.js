@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ImageBackground, ScrollView, TouchableOpacity, Text, View, Button, TextInput, ActivityIndicator } from 'react-native';
+import { SafeAreaView, ImageBackground, ScrollView, TouchableOpacity, Text, View, Button, TextInput, ActivityIndicator } from 'react-native';
 import { getUserInformation, getUser, addFriend } from '../backend/database';
 import { checkFriendStatus } from '../backend/realm';
 import { useSelector } from 'react-redux';
@@ -43,9 +43,9 @@ export const ProfileView = ({ navigation, route }) => {
             }
         });
         if(newConversation){
-            navigation.navigate('Message', {conversationID: null, conversationPrimaryID: null, recipients: [userID], newConversation: newConversation});
+            navigation.navigate('Message', {conversationID: null, conversationPrimaryID: null, recipients: [userID], usernames: [userInformation.username], newConversation: newConversation});
         }else{
-            navigation.navigate('Message', {conversationID: conversation._id, conversationPrimaryID: conversation._id, recipients: [userID], newConversation: newConversation});
+            navigation.navigate('Message', {conversationID: conversation._id, conversationPrimaryID: conversation._id, recipients: [userID], usernames: [userInformation.username], newConversation: newConversation});
         }
         
     }
@@ -62,12 +62,11 @@ export const ProfileView = ({ navigation, route }) => {
     const styles = {
         wrapper: {
             flex: 1, 
-            paddingTop: 50, 
-            backgroundColor: '#222222',
+            backgroundColor: '#1e1e1e',
             display: 'flex',
             justiftyContent: 'center',
             alignItems: 'center',
-            paddingTop: 75
+            paddingTop: 50
         },
         geocashDisplay: {
             marginTop: 20,
@@ -76,7 +75,6 @@ export const ProfileView = ({ navigation, route }) => {
             display: 'flex'
         },
         username: {
-            marginTop: 20,
             color: 'white',
             fontWeight: 'bold',
             fontSize: 30
@@ -160,6 +158,7 @@ export const ProfileView = ({ navigation, route }) => {
     }
 
     return infoReady ? (
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#1e1e1e' }}>
         <View style={styles.wrapper}>
             <Text style={styles.username}>
                 {userInformation.username}
@@ -196,11 +195,14 @@ export const ProfileView = ({ navigation, route }) => {
                 <CachedImage source={{ uri: userInformation.statusPic }} style={styles.image}/>
             </View>
         </View>
+        </SafeAreaView>
     ) : (
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#1e1e1e' }}>
         <View style={styles.wrapper}>
             <View style={{ flex: 1, display: 'flex', justiftyContent: 'center', alignItems: 'center' }} >
                 <ActivityIndicator color='white' size="small" />
             </View>
         </View>
+        </SafeAreaView>
     )
 }

@@ -9,7 +9,7 @@ import {ObjectId} from 'bson';
 
 
 export const Message = ({ navigation, route }) => {
-    let { conversationID, conversationPrimaryID, recipients, newConversation } = route.params;
+    let { conversationID, conversationPrimaryID, recipients, usernames, newConversation } = route.params;
     const [message, setMessage] = useState("");
     const [userID, setUserID] = useState('');
     const [getData, setGetData] = useState(true);
@@ -125,7 +125,7 @@ export const Message = ({ navigation, route }) => {
 
             const newConversationID = new ObjectId();
             const timestamp = new Date();
-            createNewConversation(newConversationID, timestamp, userRealm, recipients, message, userID);
+            createNewConversation(newConversationID, timestamp, userRealm, recipients, usernames, message, userID);
             sendNewMessage(newConversationID, timestamp, dispatch, message, messagesRealm, userRealm, userID, recipients);
             setFirstMessageNew(false);
 

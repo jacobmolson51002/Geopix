@@ -197,18 +197,19 @@ class SingleView extends React.PureComponent {
                 width: '100%',
                 flex: 1,
                 marginBottom: 5,
-                textShadowColor: 'rgba(0, 0, 0, 0.75)',
-                textShadowOffset: {width: -1, height: 1},
-                textShadowRadius: 10
+                shadowColor: 'black',
+                shadowOffset: {
+                    width: 1,
+                    height: 1
+                },
+                shadowOpacity: 1,
             },
             captionText: {
                 fontSize: 15,
                 color: 'white',
                 flexWrap: 'wrap',
                 paddingLeft: 15,
-                textShadowColor: 'rgba(0, 0, 0, 0.75)',
-                textShadowOffset: {width: -1, height: 1},
-                textShadowRadius: 10
+                textShadowColor: 'black',
             },
             retakeButton: {
                 color: 'white',
@@ -223,18 +224,18 @@ class SingleView extends React.PureComponent {
                 color: 'white',
                 paddingBottom: 10,
                 paddingLeft: 15,
-                textShadowColor: 'rgba(0, 0, 0, 1)',
-                textShadowOffset: {width: -1, height: 1},
-                textShadowRadius: 5
+                shadowColor: 'black',
+                shadowOffset: {
+                    width: 1,
+                    height: 1
+                },
+                shadowOpacity: 1,
             },
             geopicInfo: { 
                 fontWeight: 'bold', 
                 color: 'white', 
                 paddingTop: 5,
                 paddingLeft: 15,
-                textShadowColor: 'rgba(0, 0, 0, 0.75)',
-                textShadowOffset: {width: -1, height: 1},
-                textShadowRadius: 10
             }
         }
         const backButton = '<-';
@@ -272,7 +273,7 @@ class SingleView extends React.PureComponent {
                 </DoubleTapButton>
                 <View style={styles.bottomBox} >
                     <View  style={styles.captionBox}>
-                        <Text style={styles.geopicInfo}><TouchableOpacity style={{ margin: 0,padding: 0 }}onPress={() => {profile(geopic.userID)}}><Text style={styles.geopicInfo}>{geopic.username}</Text></TouchableOpacity>   •   <Text style={{ fontWeight: 'bold', fontSize: 12, color: "white" }}>{Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}</Text></Text>
+                        <View style={{ shadowColor:'black', shadowOffset: {width: 1, height: 1}, shadowOpacity: 1 }}><Text style={styles.geopicInfo}><TouchableOpacity style={{ margin: 0,padding: 0, boxShadow: '' }} onPress={() => {profile(geopic.userID)}}><Text style={styles.geopicInfo}>{geopic.username}</Text></TouchableOpacity><View style={{ margin: 0,padding:0 }}><Text style={styles.geopicInfo}>•    {Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}</Text></View></Text></View>
                         <View style={styles.captionTextBox} ><Text style={styles.captionText}>{geopic.caption}</Text></View>
                         <TouchableOpacity onPress={() => {viewComments()}} >
                             {geopic.comments > 0 ? (
@@ -290,7 +291,7 @@ class SingleView extends React.PureComponent {
         )
     }
 }
-
+//style={{ fontWeight: 'bold', fontSize: 12, color: "white" }}
 export const SingleFeedView = ({ route, navigation }) => {
     //const [geopicData, setGeopicData] = useState(null);
 

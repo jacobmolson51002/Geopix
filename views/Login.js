@@ -20,6 +20,7 @@ export const TextVerification = ({ username, phoneNumber, password, code, user }
     const [buttonClicked, setButtonClicked] = useState(false);
     const [userVerification, setUserVerification] = useState('');
     const [invalidCode, setInvalidCode] = useState(false);
+    const experienceId = '@geopix/Geopix';
 
     useEffect(() => {
         focusInput.current.focus();
@@ -30,12 +31,24 @@ export const TextVerification = ({ username, phoneNumber, password, code, user }
         setTimeout(async () => {
             setButtonClicked(false);
             if(userVerification === code){
-                await openUserRealm(dispatch, false, true, user._partition, username, password, phoneNumber).then(() => {
-                    navigation.reset({
-                        index: 0,
-                        routes: [{name: 'AppContainer'}],
-                      });
-                })
+                const { status } = await Notifications.getPermissionsAsync();
+                if(status == 'granted'){
+                    Notifications.getExpoPushTokenAsync({experienceId}).then(async (token) => {
+                        await openUserRealm(dispatch, false, true, user._partition, token.data, username, password, phoneNumber).then(() => {
+                            navigation.reset({
+                                index: 0,
+                                routes: [{name: 'AppContainer'}],
+                              });
+                        })
+                    })
+                }else{
+                    await openUserRealm(dispatch, false, true, user._partition, '', username, password, phoneNumber).then(() => {
+                        navigation.reset({
+                            index: 0,
+                            routes: [{name: 'AppContainer'}],
+                          });
+                    })
+                }
             }else{
                 setInvalidCode(true);
             }

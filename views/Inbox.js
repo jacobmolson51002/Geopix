@@ -1,16 +1,87 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, Button, TextInput, ScrollView, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
+import { SafeAreaView, Text, View, Button, TextInput, ScrollView, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
 import { logUserOut } from '../backend/realm';
-import { getUser, acceptRequest, declineRequest } from '../backend/database';
+import { getUser, acceptRequest, declineRequest, getTime } from '../backend/database';
 import { useSelector } from 'react-redux';
 
+
+export const Message = ({ conversation }) => {
+    console.log(conversation);
+    const [username, setUsername] = useState('');
+    const [rerender, setRerender] = useState(true);
+    /*if(rerender){
+        setRerender(false);
+        getUser(conversation.recipients[0]).then((user) => {
+            console.log(user.username);
+            setUsername(user.username);
+        });
+    }*/
+
+    const [timeStamp, units] = getTime(conversation.timestamp);
+
+    const styles = {
+        messageDate: {
+            color: '#bebebe',
+            fontSize: 12
+        },
+        conversation: {
+            width: '100%',
+            marginBottom: 25
+        },
+        recipient: {
+            fontWeight: 'bold',
+            color: 'white',
+            marginBottom: 5,
+            fontSize: 15
+        },
+        lastMessage: {
+            marginLeft: 10,
+            fontSize: 13,
+            color: '#bebebe'
+        },
+        newMessage: {
+            fontSize: 13,
+            color: 'white'
+        },
+        newMessageContainer: {
+            display: 'flex',
+            position: 'absolute',
+            right: 10,
+            top: '50%',
+            height: '100%',
+            justiftyContent: 'center',
+            alignItems: 'center',
+            width: 10
+        },
+        newMessageIcon: {
+            height: 10,
+            width: 10,
+            borderRadius: 25,
+            backgroundColor: 'turquoise'
+        },
+
+    }
+    return(
+        <TouchableOpacity key={index} onPress={() => {navigation.navigate('Message', {conversationID: conversation.conversationID, conversationPrimaryID: conversation._id, recipients: conversation.recipients, newConversation: false});}} style={styles.conversation}>
+            <View style={{ display: 'flex', flexDirection: 'row' }}><TouchableOpacity onPress={() => {navigation.navigate('profileView', {userID: conversation.recipients[0]})}}><Text style={styles.recipient}>{conversation.usernames[0]}</Text></TouchableOpacity><Text style={{ color: 'white', fontSize: 18 }}>    •    </Text><Text style={styles.messageDate}>something</Text></View> 
+            <Text style={conversation.unread > 0 ? styles.newMessage : styles.lastMessage}>{conversation.lastMessage}</Text>
+            {conversation.unread > 0 ? (
+                <View style={styles.newMessageContainer}>
+                    <View style={styles.newMessageIcon} />
+                </View>
+            ) : (
+                <View />
+            )}
+        </TouchableOpacity>
+    )
+    //{Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}
+}
 
 export const Inbox = ({ navigation, route }) => {
 
     const userReducer = useSelector(state => state.userReducer);
     const conversations = userReducer.conversations;
-    const requests = userReducer.requests;
-    const [usernames, setUsernames] = useState(null);
+    const activityList = userReducer.requests;
 
     const viewProfile = () => {
 
@@ -27,24 +98,23 @@ export const Inbox = ({ navigation, route }) => {
     const styles = {
         wrapper: {
             flex: 1,
-            backgroundColor: '#222222'
+            backgroundColor: '#1E1E1E',
+            paddingLeft: 24,
+            paddingRight: 24
         },
         header: {
             fontWeight: 'bold',
             color: 'white',
-            fontSize: 18,
-            margin: 10,
+            fontSize: 24,
             marginBottom: 20,
-            marginTop: 100
         },
         conversationsList: {
             flex: 1,
             width: '100%',
             height: '100%',
         },
-        activityList: {
-            maxHeight: 200,
-
+        conversationsList: {
+            width: '100%',
         },
         conversation: {
             width: '100%',
@@ -53,7 +123,7 @@ export const Inbox = ({ navigation, route }) => {
         recipient: {
             fontWeight: 'bold',
             color: 'white',
-            margin: 10,
+            marginBottom: 5,
             fontSize: 15
         },
         lastMessage: {
@@ -62,7 +132,6 @@ export const Inbox = ({ navigation, route }) => {
             color: '#bebebe'
         },
         newMessage: {
-            marginLeft: 10,
             fontSize: 13,
             color: 'white'
         },
@@ -124,14 +193,21 @@ export const Inbox = ({ navigation, route }) => {
         },
         declineRequestText: {
             color: 'white'
+        },
+        messageDate: {
+            color: '#bebebe',
+            fontSize: 12
         }
     }
 
     return  (
-        <View style={styles.wrapper}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#1E1E1E' }}>
+        <ScrollView style={styles.wrapper}>
+            {activityList.length > 0 ? (
+            <View>
             <Text style={styles.header}>Activity</Text>
-            <ScrollView style={styles.activityList}>
-                {requests.map((request, index) => {
+            <View style={styles.activityList}>
+                {activityList.map((request, index) => {
                     //console.log(usernames);
                     //console.log(usernames[index]);
                     return(
@@ -150,27 +226,32 @@ export const Inbox = ({ navigation, route }) => {
                         </View>
                     )
                 })}
-            </ScrollView>
+            </View>
+            </View>
+            ) : (
+                <View />
+            )}
+            <View>
             <Text style={styles.header}>Messages</Text>
-            <ScrollView style={styles.conversationsList}>
+            <View style={styles.conversationsList}>
                 {conversations.map((conversation, index) => {
-                    //console.log(usernames);
-                    //console.log(usernames[index]);
-                    return(
-                        <TouchableOpacity key={index} onPress={() => {navigation.navigate('Message', {conversationID: conversation.conversationID, conversationPrimaryID: conversation._id, recipients: conversation.recipients, newConversation: false});}} style={styles.conversation}>
-                            <Text style={styles.recipient}>nothing</Text>
-                            <Text style={conversation.unread > 0 ? styles.newMessage : styles.lastMessage}>{conversation.lastMessage}</Text>
-                            {conversation.unread > 0 ? (
-                                <View style={styles.newMessageContainer}>
-                                    <View style={styles.newMessageIcon} />
-                                </View>
-                            ) : (
-                                <View />
-                            )}
-                        </TouchableOpacity>
-                    )
+                        return(
+                            <TouchableOpacity key={index} onPress={() => {navigation.navigate('Message', {conversationID: conversation.conversationID, conversationPrimaryID: conversation._id, recipients: conversation.recipients, newConversation: false});}} style={styles.conversation}>
+                                <View style={{ display: 'flex', flexDirection: 'row' }}><TouchableOpacity onPress={() => {navigation.navigate('profileView', {userID: conversation.recipients[0]})}}><Text style={styles.recipient}>{conversation.usernames[0]}</Text></TouchableOpacity><Text style={{ color: 'white', fontSize: 18 }}>    •    </Text><Text style={styles.messageDate}>something</Text></View> 
+                                <Text style={conversation.unread > 0 ? styles.newMessage : styles.lastMessage}>{conversation.lastMessage}</Text>
+                                {conversation.unread > 0 ? (
+                                    <View style={styles.newMessageContainer}>
+                                        <View style={styles.newMessageIcon} />
+                                    </View>
+                                ) : (
+                                    <View />
+                                )}
+                            </TouchableOpacity>
+                        )
                 })}
-            </ScrollView>
-        </View>
+            </View>
+            </View>
+        </ScrollView>
+        </SafeAreaView>
     ) 
 }

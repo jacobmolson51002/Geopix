@@ -45,6 +45,10 @@ export const Conversation = {
             type: 'list',
             objectType: 'string'
         },
+        usernames: {
+            type: 'list',
+            objectType: 'string'
+        },
         lastMessage: "string",
         lastMessageFrom: "string",
         lastMessageTimestamp: "string",

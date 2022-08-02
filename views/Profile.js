@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ImageBackground, TouchableOpacity, ActivityIndicator, Text, View, Button, TextInput } from 'react-native';
+import { SafeAreaView, ImageBackground, TouchableOpacity, ActivityIndicator, Text, View, Button, TextInput } from 'react-native';
 import { uploadManyGeopics, deleteManyGeopics, sendPushNotification, updateUserInformation } from '../backend/database';
 import { logUserOut, getUserInfo } from '../backend/realm';
 import { useSelector } from 'react-redux';
@@ -78,12 +78,11 @@ export const Profile = ({ navigation }) => {
     const styles = {
         wrapper: {
             flex: 1, 
-            paddingTop: 50, 
-            backgroundColor: '#222222',
+            backgroundColor: '#1e1e1e',
             display: 'flex',
             justiftyContent: 'center',
             alignItems: 'center',
-            paddingTop: 75
+            paddingTop: 50,
         },
         geocashDisplay: {
             marginTop: 20,
@@ -92,7 +91,6 @@ export const Profile = ({ navigation }) => {
             display: 'flex'
         },
         username: {
-            marginTop: 20,
             color: 'white',
             fontWeight: 'bold',
             fontSize: 30
@@ -216,6 +214,7 @@ export const Profile = ({ navigation }) => {
     }
 
     return infoReady ? (
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#1e1e1e' }}>
         <View style={styles.wrapper}>
             {editing === false ? (
             <Text style={styles.username}>
@@ -278,6 +277,7 @@ export const Profile = ({ navigation }) => {
                 <View />
             )}
         </View>
+        </SafeAreaView>
     ) : (
         <View style={styles.wrapper}>
             <View style={{ flex: 1, display: 'flex', justiftyContent: 'center', alignItems: 'center' }} >

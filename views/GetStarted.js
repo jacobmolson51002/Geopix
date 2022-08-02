@@ -590,6 +590,8 @@ export const Permissions = ({ phoneNumber, username, password, statusPic }) => {
     const [buttonClicked, setButtonClicked] = useState(false);
     const [location, setLocation] = useState(false);
     const [notifications, setNotifications] = useState(false);
+    const [expoPushToken, setExpoPushToken] = useState('');
+    const experienceId = '@geopix/Geopix';
     
     const locationPermissions = async () => {
         let { status } = await Location.requestForegroundPermissionsAsync();
@@ -602,6 +604,8 @@ export const Permissions = ({ phoneNumber, username, password, statusPic }) => {
 
     const notificationPermissions = async () => {
         const { status } = await Notifications.getPermissionsAsync();
+        const token = (await Notifications.getExpoPushTokenAsync({experienceId})).data;
+        setExpoPushToken(token);
         if(status != 'granted'){
             setNotifications(false);
         }{
@@ -612,7 +616,7 @@ export const Permissions = ({ phoneNumber, username, password, statusPic }) => {
     const login = async () => {
         phoneNumber = phoneNumber.replace(/-/g, '');
         const newNumber = parseInt(phoneNumber);
-        await openUserRealm(dispatch, true, false, '', username, password, newNumber, statusPic).then(() => {
+        await openUserRealm(dispatch, true, false, '', expoPushToken, username, password, newNumber, statusPic).then(() => {
             navigation.reset({
                 index: 0,
                 routes: [{name: 'AppContainer'}],
