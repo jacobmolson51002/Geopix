@@ -296,10 +296,14 @@ export const SingleFeedView = ({ route, navigation }) => {
     //const [geopicData, setGeopicData] = useState(null);
 
     const { geopic, sheetRef, setComments, setCurrentGeopic } = route.params;
+    const nav = useNavigation();
 
     const geopicView = [geopic];
 
-    const renderItem = ({ item }) => <SingleView navigation={navigation} setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />;
+    const renderItem = useCallback(
+        ({ item }) => <SingleView navigation={nav} setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />,
+        []
+    );
     return (
         <View style={{ flex:  1, backgroundColor: '#222222' }}>
             <FlatList data={geopicView} renderItem={renderItem} keyExtractor={geopic => geopic._id} />
@@ -311,12 +315,16 @@ export const ClusterFeedView = ({ route, navigation }) => {
     //const [geopicData, setGeopicData] = useState(null);
 
     const { cluster, sheetRef, setComments, setCurrentGeopic } = route.params;
+    const nav = useNavigation();
 
     //console.log("printing cluster");
 
     //console.log(cluster);
 
-    const renderItem = ({ navigation, item }) => <SingleView setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} navigation={navigation} geopic={item} />;
+    const renderItem = useCallback(
+        ({ item }) => <SingleView navigation={nav} setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />,
+        []
+    );
     return (
         <View style={{ flex: 1 }}>
             <FlatList style={{ flex: 1, backgroundColor: '#222222' }} 
