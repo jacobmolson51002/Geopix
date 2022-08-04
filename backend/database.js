@@ -1,15 +1,14 @@
 import { Realm } from '@realm/react';
 import { userSchema } from './schemas';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUserId, setGeopics, setClusters, addGeopic, addCluster, updateGeopic } from '../redux/actions';
+import { setCurrentLocation, setUserId, setGeopics, setClusters, addGeopic, addCluster, updateGeopic, setFriendGeopics } from '../redux/actions';
 import { useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setLocation } from './location';
 import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as Location from 'expo-location';
-import { setCurrentLocation } from '../redux/actions';
-import { app, getViewedGeopicsList, addNewFriend, addPendingFriend } from './realm';
+import { app, getViewedGeopicsList, addNewFriend, addPendingFriend, getUserInfo } from './realm';
 import {ObjectId} from 'bson';
 
 //export const app = new Realm.App({ id: "geopix-xpipz", timeout: 10000 });
@@ -830,4 +829,19 @@ export const updateUserInformation = async (userID, oldUsername, newUsername, ne
         await users.updateOne({_partition: userID}, {$set: {username: newUsername}});
       }
     }
+}
+
+export const getFriendGeopics = async (realm) => {
+  const userID = await AsyncStorage.getItem('userID');
+  const userInfo = await getUserInfo(realm, userID);
+  const friends = userInfo.friends;
+  console.log(`these are my friends ${friends}`);
+  const geopics = mongodb.db('geopics').collection('public');
+  if(friends.length > 0){
+    const friendGeopics = await geopics.find({ userID: { $in: friends } });
+    return friendGeopics;
+  }else{
+    return 'no friends';
+  }
+
 }

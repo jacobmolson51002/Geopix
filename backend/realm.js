@@ -435,6 +435,8 @@ export const getUserInfo = async (realm, userID) => {
   return userInfo;
 }
 
+
+
 /*
 export const getRealm = () => {
   // MongoDB RealmConfiguration

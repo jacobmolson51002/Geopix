@@ -344,20 +344,35 @@ export const ClusterFeedView = ({ route, navigation }) => {
 
 export const FeedView = (props) => {
     //const [geopicData, setGeopicData] = useState(null);
-    let geopics = props.data.geopics;
-    let clusters = props.data.clusters;
+    let nearbyGeopics = props.data.geopics;
+    let nearbyClusters = props.data.clusters;
+    const geopicRealm = useSelector(state => state.geopicsReducer);
+    let friendGeopics = geopicRealm.friendGeopics;
     const sheetRef = props.sheetRef;
     const setCurrentGeopic = props.setCurrentGeopic;
     const setComments = props.setComments;
     const navigation = useNavigation();
+    const selection = props.selection;
 
-    clusters.map((cluster) => {
+    nearbyClusters.map((cluster) => {
         //console.log(cluster.geopics);
-        const newData = geopics.concat(cluster.geopics);
-        geopics = newData;
+        const newData = nearbyGeopics.concat(cluster.geopics);
+        nearbyGeopics = newData;
     });
 
-    geopics.sort((a, b) => {
+    nearbyGeopics.sort((a, b) => {
+        const aTime = new Date(a.timestamp);
+        const bTime = new Date(b.timestamp);
+        if(aTime.getTime() > bTime.getTime()){
+            return -1;
+        }
+        if(aTime.getTime() < bTime.getTime()){
+            return 1;
+        }
+        return 0;
+    })
+
+    friendGeopics.sort((a, b) => {
         const aTime = new Date(a.timestamp);
         const bTime = new Date(b.timestamp);
         if(aTime.getTime() > bTime.getTime()){
@@ -380,11 +395,12 @@ export const FeedView = (props) => {
     const keyExtractor = useCallback((item) => item._id, []);
     return (
         <View style={{ flex: 1 }}>
+        {selection === 'nearby' ? (
             <FlatList style={{ flex: 1, backgroundColor: '#222222' }} 
-                      data={geopics} renderItem={renderItem} 
+                      data={nearbyGeopics} renderItem={renderItem} 
                       keyExtractor={keyExtractor} 
                       showsVerticalScrollIndicator={false}
-                      snapToOffsets={[...Array(geopics.length)].map((x,i) => (i * Dimensions.get('window').height * 0.9))}
+                      snapToOffsets={[...Array(nearbyGeopics.length)].map((x,i) => (i * Dimensions.get('window').height * 0.9))}
                       maxToRenderPerBatch={2}
                       windowSize={2}
                       initialNumToRender={3}
@@ -393,6 +409,21 @@ export const FeedView = (props) => {
 
                       >
             </FlatList>
+        ) : (
+            <FlatList style={{ flex: 1, backgroundColor: '#222222' }} 
+                      data={friendGeopics} renderItem={renderItem} 
+                      keyExtractor={keyExtractor} 
+                      showsVerticalScrollIndicator={false}
+                      snapToOffsets={[...Array(friendGeopics.length)].map((x,i) => (i * Dimensions.get('window').height * 0.9))}
+                      maxToRenderPerBatch={2}
+                      windowSize={2}
+                      initialNumToRender={3}
+                      snapToAlignment='start'
+                      decelerationRate='fast'
+
+                      >
+            </FlatList>
+        )}
             <StatusBar style="light" />
         </View>
     )

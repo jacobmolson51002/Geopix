@@ -1,4 +1,4 @@
-import { CURRENT_LOCATION, SET_MESSAGE_DATA, SET_REQUESTS, SET_UNREAD_COUNT, USER_ID, SET_GEOPICS, ADD_GEOPIC, SET_CLUSTERS, ADD_CLUSTER, UPDATE_GEOPIC, SET_USER_REALM, SET_MESSAGES_REALM, SET_CURRENT_CONVERSATION } from './actions';
+import { CURRENT_LOCATION, SET_MESSAGE_DATA, SET_REQUESTS, SET_UNREAD_COUNT, USER_ID, SET_GEOPICS, ADD_GEOPIC, SET_CLUSTERS, ADD_CLUSTER, SET_FRIEND_GEOPICS, UPDATE_GEOPIC, SET_USER_REALM, SET_MESSAGES_REALM, SET_CURRENT_CONVERSATION } from './actions';
 
 const initializeUserState = {
     userID: 'this is something',
@@ -16,7 +16,8 @@ const initializeUserState = {
 
 const initilizeGeopicsState = {
     geopics: null,
-    clusters: null
+    clusters: null,
+    friendGeopics: [],
 }
 
 
@@ -61,6 +62,8 @@ export function geopicsReducer(state = initilizeGeopicsState, action){
             return{...state, geopics: action.payload};
         case SET_CLUSTERS:
             return{...state, clusters: action.payload};
+        case SET_FRIEND_GEOPICS:
+            return {...state, friendGeopics: action.payload};
         case ADD_GEOPIC:
             return{...state, geopics: [...state.geopics, action.payload]}
         case ADD_CLUSTER:

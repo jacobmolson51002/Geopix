@@ -3,6 +3,7 @@ export const CURRENT_LOCATION = 'CURRENT_LOCATION';
 export const CHANGE_NAV_STATE = 'CHANGE_NAV_STATE';
 export const SET_GEOPICS = 'GEOPICS';
 export const SET_CLUSTERS = 'SET_CLUSTERS';
+export const SET_FRIEND_GEOPICS = 'SET_FRIEND_GEOPICS';
 export const ADD_GEOPIC = 'ADD_GEOPIC';
 export const ADD_CLUSTER = 'ADD_CLUSTER';
 export const UPDATE_GEOPIC = 'UPDATE_GEOPIC';
@@ -59,6 +60,13 @@ export const setClusters = clusters => dispatch => {
     dispatch({
         type: SET_CLUSTERS,
         payload: clusters
+    })
+}
+
+export const setFriendGeopics = friendGeopics => dispatch => {
+    dispatch({
+        type: SET_FRIEND_GEOPICS,
+        payload: friendGeopics
     })
 }
 
