@@ -616,7 +616,7 @@ export const greaterThan3Days = (timestamp) => {
   }
 }
 
-export const getUser = async (userID) => {
+export const getUsername = async (userID) => {
   console.log('getUser');
   const users = mongodb.db('users').collection('info');
   const userInfo = await users.findOne({_partition: userID});

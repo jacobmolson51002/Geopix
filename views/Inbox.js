@@ -35,9 +35,8 @@ export const Message = ({ conversation }) => {
             fontSize: 15
         },
         lastMessage: {
-            marginLeft: 10,
             fontSize: 13,
-            color: '#bebebe'
+            color: 'blue'
         },
         newMessage: {
             fontSize: 13,
@@ -59,12 +58,21 @@ export const Message = ({ conversation }) => {
             borderRadius: 25,
             backgroundColor: 'turquoise'
         },
+        messageDisplay: {
+            width: '80%'
+        }
 
     }
+    //<View style={{ display: 'flex', flexDirection: 'row' }}><Text style={styles.geopicInfo}><TouchableOpacity onPress={() => {navigation.navigate('profileView', {userID: conversation.recipients[0]})}}><Text style={styles.recipient}>{conversation.usernames[0]}</Text></TouchableOpacity><View style={{ margin: 0,padding:0 }}><Text style={{ color: 'white', fontSize: 18 }}>    •   something</Text><View/></Text></View> 
+    //<View><Text style={styles.geopicInfo}><TouchableOpacity style={{ margin: 0,padding: 0, boxShadow: '' }} onPress={() => {profile(geopic.userID)}}><Text style={styles.geopicInfo}>{geopic.username}</Text></TouchableOpacity><View style={{ margin: 0,padding:0 }}><Text style={styles.geopicInfo}>•    {Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}</Text></View></Text></View>
     return(
         <TouchableOpacity key={index} onPress={() => {navigation.navigate('Message', {conversationID: conversation.conversationID, conversationPrimaryID: conversation._id, recipients: conversation.recipients, newConversation: false});}} style={styles.conversation}>
-            <View style={{ display: 'flex', flexDirection: 'row' }}><TouchableOpacity onPress={() => {navigation.navigate('profileView', {userID: conversation.recipients[0]})}}><Text style={styles.recipient}>{conversation.usernames[0]}</Text></TouchableOpacity><Text style={{ color: 'white', fontSize: 18 }}>    •    </Text><Text style={styles.messageDate}>something</Text></View> 
-            <Text style={conversation.unread > 0 ? styles.newMessage : styles.lastMessage}>{conversation.lastMessage}</Text>
+            
+            <View><Text style={styles.geopicInfo}><TouchableOpacity style={{ margin: 0, padding: 0 }} onPress={navigation.navigate('profileView', {userID: conversation.recipients[0]})}><Text style={styles.geopicInfo}>{conversation.usernames[0]}</Text></TouchableOpacity><View style={{ margin: 0, padding: 0 }}><Text style={styles.geopicInfo}>•    {Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}</Text></View></Text></View>
+            
+            <View style={styles.messageDisplay}>
+            <Text  style={conversation.unread > 0 ? styles.newMessage : styles.lastMessage}>{conversation.lastMessage}</Text>
+            </View>
             {conversation.unread > 0 ? (
                 <View style={styles.newMessageContainer}>
                     <View style={styles.newMessageIcon} />
@@ -82,6 +90,18 @@ export const Inbox = ({ navigation, route }) => {
     const userReducer = useSelector(state => state.userReducer);
     const conversations = userReducer.conversations;
     const activityList = userReducer.requests;
+    const [timestamps, setTimestamps] = useState(null);
+    console.log('rendered');
+
+    useEffect(() => {
+        let newTimestamps = []
+        conversations.map((conversation) => {
+            const [timeStamp, units] = getTime(conversation.timestamp);
+            newTimestamps.push({timeStamp: timeStamp, units: units});
+        });
+        setTimestamps(newTimestamps);
+
+    })
 
     const viewProfile = () => {
 
@@ -95,6 +115,7 @@ export const Inbox = ({ navigation, route }) => {
         declineRequest(userID);
     }
     
+
     const styles = {
         wrapper: {
             flex: 1,
@@ -127,7 +148,6 @@ export const Inbox = ({ navigation, route }) => {
             fontSize: 15
         },
         lastMessage: {
-            marginLeft: 10,
             fontSize: 13,
             color: '#bebebe'
         },
@@ -195,8 +215,13 @@ export const Inbox = ({ navigation, route }) => {
             color: 'white'
         },
         messageDate: {
+            fontWeight: 'bold',
             color: '#bebebe',
-            fontSize: 12
+            marginBottom: 7,
+            fontSize: 11
+        },
+        messageDisplay: {
+            width: '80%'
         }
     }
 
@@ -237,8 +262,11 @@ export const Inbox = ({ navigation, route }) => {
                 {conversations.map((conversation, index) => {
                         return(
                             <TouchableOpacity key={index} onPress={() => {navigation.navigate('Message', {conversationID: conversation.conversationID, conversationPrimaryID: conversation._id, recipients: conversation.recipients, newConversation: false});}} style={styles.conversation}>
-                                <View style={{ display: 'flex', flexDirection: 'row' }}><TouchableOpacity onPress={() => {navigation.navigate('profileView', {userID: conversation.recipients[0]})}}><Text style={styles.recipient}>{conversation.usernames[0]}</Text></TouchableOpacity><Text style={{ color: 'white', fontSize: 18 }}>    •    </Text><Text style={styles.messageDate}>something</Text></View> 
-                                <Text style={conversation.unread > 0 ? styles.newMessage : styles.lastMessage}>{conversation.lastMessage}</Text>
+                                <View><Text style={styles.geopicInfo}><TouchableOpacity style={{ margin: 0, padding: 0 }} onPress={() => {navigation.navigate('profileView', {userID: conversation.recipients[0]})}}><Text style={styles.recipient}>{conversation.usernames[0]}</Text></TouchableOpacity><View style={{ margin: 0, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{timestamps != null ? (<Text style={styles.messageDate}>    •    {Math.floor(timestamps[index].timeStamp)} {timestamps[index].units} {timestamps[index].timeStamp === "now" ? "" : "ago"}</Text>) : (<View />)}</View></Text></View>
+                                
+                                <View style={styles.messageDisplay}>
+                                    <Text numberOfLines={1} ellipsizeMode='tail' style={conversation.unread > 0 ? styles.newMessage : styles.lastMessage}>{conversation.lastMessage}</Text>
+                                </View>
                                 {conversation.unread > 0 ? (
                                     <View style={styles.newMessageContainer}>
                                         <View style={styles.newMessageIcon} />

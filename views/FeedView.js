@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef } from 'react';
 import { Dimensions, SafeAreaView, Image, View, Text, TouchableOpacity, TouchableHighlight, Button, FlatList } from 'react-native';
 import { getImage, getComments, addComment, vote, getTime } from '../backend/database';
 import AppLoading from 'expo-app-loading';
@@ -15,40 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Entypo } from '@expo/vector-icons';
 import { TapGestureHandler, State } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
-
-
-
-export function DoubleTapButton({ onDoubleTap, children }) {
-    const onHandlerStateChange = ({ nativeEvent }) => {
-      if (nativeEvent.state === State.ACTIVE) {
-        onDoubleTap && onDoubleTap();
-      }
-    };
-  
-    return (
-      <TapGestureHandler
-        onHandlerStateChange={onHandlerStateChange}
-        numberOfTaps={2}>
-        {children}
-      </TapGestureHandler>
-    );
-  }
-
-  export function TripleTapButton({ onDoubleTap, children }) {
-    const onHandlerStateChange = ({ nativeEvent }) => {
-      if (nativeEvent.state === State.ACTIVE) {
-        onDoubleTap && onDoubleTap();
-      }
-    };
-  
-    return (
-      <TapGestureHandler
-        onHandlerStateChange={onHandlerStateChange}
-        numberOfTaps={3}>
-        {children}
-      </TapGestureHandler>
-    );
-  }
+import MultiTap from 'react-native-multitap';
 
 
 /*export const DisplayImage = (imageUrl) => {
@@ -61,9 +28,10 @@ export function DoubleTapButton({ onDoubleTap, children }) {
     )
 }*/
 
-export const Votes = ({ voteableItem }) => {
+export const Votes = ({ voteableItem, tap }) => {
     const [voteCount, setVoteCount] = useState(voteableItem.vote != null ? voteableItem.vote : 0);
     const [displayVote, setDisplayVote] = useState(voteableItem.votes[2]);
+    const [localTap, setLocalTap] = useState(0);
     console.log(voteableItem);
     const upVote = async () => {
         if(voteCount === 1) {
@@ -102,6 +70,16 @@ export const Votes = ({ voteableItem }) => {
         }
 
     }
+    if(tap !== localTap){
+        setLocalTap(tap);
+        if(tap == 1){
+            console.log('upvote called');
+            upVote();
+        }else{
+            downVote();
+        }
+    }
+
     const styles = {
         wrapper: {
             display: 'flex',
@@ -152,6 +130,14 @@ export const Votes = ({ voteableItem }) => {
 }
 
 class SingleView extends React.PureComponent {
+            
+    upvote = () => {
+        this.child.upVote();
+    }
+
+    downvote = () => {
+        this.child.downVote();
+    }
 
     render () {
         let viewed = false;
@@ -161,6 +147,8 @@ class SingleView extends React.PureComponent {
         const { sheetRef } = this.props;
         const { setCurrentGeopic } = this.props;
         const { setComments } = this.props;
+        const { tap } = this.props;
+        const { setTap } = this.props;
         if(geopic.viewed === false){
             geopicViewed(geopic._id);
         }
@@ -266,11 +254,27 @@ class SingleView extends React.PureComponent {
             navigation.navigate('viewProfile', { userID: userID });
         };
 
+        const callUpvote = () => {
+            this.upvote();
+        }
+
+        const callDownvote = () => {
+            this.downvote();
+        }
+
         return (
             <View style={styles.container}>
-                <DoubleTapButton onDoubleTap={() => {console.log("double tap")}}>
+                <MultiTap
+                    onDoubleTap={callUpvote}
+                    onSingleTap={callDownvote}
+                    onTripleTap={() => console.log("Triple tapped")}
+                    onNTaps={(n) => { console.log("I was tapped " + n + " times") }}
+                    onLongPress={() => console.log("Long pressed")}
+                    delay={300}
+
+                >
                 <CachedImage source={{ uri: geopic.pic }} style={styles.image}/>
-                </DoubleTapButton>
+                </MultiTap>
                 <View style={styles.bottomBox} >
                     <View  style={styles.captionBox}>
                         <View style={{ shadowColor:'black', shadowOffset: {width: 1, height: 1}, shadowOpacity: 1 }}><Text style={styles.geopicInfo}><TouchableOpacity style={{ margin: 0,padding: 0, boxShadow: '' }} onPress={() => {profile(geopic.userID)}}><Text style={styles.geopicInfo}>{geopic.username}</Text></TouchableOpacity><View style={{ margin: 0,padding:0 }}><Text style={styles.geopicInfo}>•    {Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}</Text></View></Text></View>
@@ -283,7 +287,7 @@ class SingleView extends React.PureComponent {
                             )}
                         </TouchableOpacity>
                     </View>
-                    <Votes style={styles.votes} voteableItem={geopic} />
+                    <Votes forwardRef={child => {this.child = child}} style={styles.votes} tap={tap} voteableItem={geopic} />
                 </View>
                 <StatusBar style="light" />
                
@@ -353,6 +357,7 @@ export const FeedView = (props) => {
     const setComments = props.setComments;
     const navigation = useNavigation();
     const selection = props.selection;
+    const [tap, setTap] = useState(0);
 
     nearbyClusters.map((cluster) => {
         //console.log(cluster.geopics);
@@ -389,7 +394,7 @@ export const FeedView = (props) => {
     //console.log(cluster);
 
     const renderItem = useCallback(
-        ({ item }) => <SingleView navigation={navigation} setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />,
+        ({ item }) => <SingleView tap={tap} setTap={setTap} navigation={navigation} setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />,
         []
     );
     const keyExtractor = useCallback((item) => item._id, []);
