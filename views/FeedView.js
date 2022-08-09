@@ -16,6 +16,7 @@ import { Entypo } from '@expo/vector-icons';
 import { TapGestureHandler, State } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import MultiTap from 'react-native-multitap';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
 
 /*export const DisplayImage = (imageUrl) => {
@@ -346,18 +347,22 @@ export const ClusterFeedView = ({ route, navigation }) => {
     )
 }
 
-export const FeedView = (props) => {
-    //const [geopicData, setGeopicData] = useState(null);
-    let nearbyGeopics = props.data.geopics;
-    let nearbyClusters = props.data.clusters;
-    const geopicRealm = useSelector(state => state.geopicsReducer);
-    let friendGeopics = geopicRealm.friendGeopics;
-    const sheetRef = props.sheetRef;
-    const setCurrentGeopic = props.setCurrentGeopic;
-    const setComments = props.setComments;
+export const NearbyFeedView = ({ selection, geopics, clusters, sheetRef, setComments, setCurrentGeopic, tap, setTap }) => {
+    console.log(`length: ${geopics.length}`);
+    let nearbyGeopics = geopics;
+    let nearbyClusters = clusters;
     const navigation = useNavigation();
-    const selection = props.selection;
-    const [tap, setTap] = useState(0);
+    const [rerender, setRerender] = useState(true);
+
+    if(rerender){
+        setRerender(false);
+        console.log(selection);
+        if(selection !== 'nearby'){
+
+        }
+    }
+
+    console.log(`heres the nearby geopics: ${nearbyGeopics}`);
 
     nearbyClusters.map((cluster) => {
         //console.log(cluster.geopics);
@@ -375,7 +380,81 @@ export const FeedView = (props) => {
             return 1;
         }
         return 0;
-    })
+    });
+
+    console.log(`nearbyGeopics length: ${nearbyGeopics.length}`);
+
+    const renderItem = useCallback(
+        ({ item }) => <SingleView tap={tap} setTap={setTap} navigation={navigation} setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} geopic={item} />,
+        []
+    );
+
+    const keyExtractor = useCallback((item) => item._id, []);
+    
+    return (
+        <View style={{ flex: 1 }}>
+            
+            <FlatList style={{ flex: 1, backgroundColor: '#222222' }} 
+            data={nearbyGeopics} renderItem={renderItem} 
+            keyExtractor={(item, index) => String(index)}
+            showsVerticalScrollIndicator={false}
+            snapToOffsets={[...Array(nearbyGeopics.length)].map((x,i) => (i * Dimensions.get('window').height * 0.9))}
+            maxToRenderPerBatch={2}
+            windowSize={2}
+            initialNumToRender={3}
+            snapToAlignment='start'
+            decelerationRate='fast'
+
+            >
+        </FlatList>
+        </View>
+    )
+
+}
+
+export const FriendsFeedView = ({ selection }) => {
+    return (
+        <View />
+    )
+}
+
+/*
+<CachedImage source={{ uri: geopics[0].pic }} style={{ width: '100%' , height: '100%'}}/>
+*/
+
+export const FeedView = (props) => {
+    //const [geopicData, setGeopicData] = useState(null);
+    let nearbyGeopics = props.data.geopics;
+    let nearbyClusters = props.data.clusters;
+    const geopicRealm = useSelector(state => state.geopicsReducer);
+    let friendGeopics = geopicRealm.friendGeopics;
+    const sheetRef = props.sheetRef;
+    const setCurrentGeopic = props.setCurrentGeopic;
+    const setComments = props.setComments;
+    const navigation = useNavigation();
+    const selection = props.selection;
+    console.log(selection);
+    const [tap, setTap] = useState(0);
+    const Tab = createMaterialTopTabNavigator();
+    const [nearby, setNearby] = useState([]);
+
+    nearbyClusters.map((cluster) => {
+        //console.log(cluster.geopics);
+        const newData = nearbyGeopics.concat(cluster.geopics);
+        nearbyGeopics = newData;
+    });
+
+    nearbyGeopics.sort((a, b) => {
+        const aTime = new Date(a.timestamp);
+        const bTime = new Date(b.timestamp);
+        if(aTime.getTime() > bTime.getTime()){
+            return -1;
+        }
+        if(aTime.getTime() < bTime.getTime()){
+            return 1;
+        }
+        return 0;
+    });
 
     friendGeopics.sort((a, b) => {
         const aTime = new Date(a.timestamp);
@@ -387,7 +466,7 @@ export const FeedView = (props) => {
             return 1;
         }
         return 0;
-    })
+    });
 
     //console.log("printing cluster");
 
@@ -399,36 +478,37 @@ export const FeedView = (props) => {
     );
     const keyExtractor = useCallback((item) => item._id, []);
     return (
-        <View style={{ flex: 1 }}>
-        {selection === 'nearby' ? (
-            <FlatList style={{ flex: 1, backgroundColor: '#222222' }} 
-                      data={nearbyGeopics} renderItem={renderItem} 
-                      keyExtractor={keyExtractor} 
-                      showsVerticalScrollIndicator={false}
-                      snapToOffsets={[...Array(nearbyGeopics.length)].map((x,i) => (i * Dimensions.get('window').height * 0.9))}
-                      maxToRenderPerBatch={2}
-                      windowSize={2}
-                      initialNumToRender={3}
-                      snapToAlignment='start'
-                      decelerationRate='fast'
-
-                      >
-            </FlatList>
-        ) : (
-            <FlatList style={{ flex: 1, backgroundColor: '#222222' }} 
-                      data={friendGeopics} renderItem={renderItem} 
-                      keyExtractor={keyExtractor} 
-                      showsVerticalScrollIndicator={false}
-                      snapToOffsets={[...Array(friendGeopics.length)].map((x,i) => (i * Dimensions.get('window').height * 0.9))}
-                      maxToRenderPerBatch={2}
-                      windowSize={2}
-                      initialNumToRender={3}
-                      snapToAlignment='start'
-                      decelerationRate='fast'
-
-                      >
-            </FlatList>
-        )}
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.0)' }}>
+            <Tab.Navigator screenOptions={{
+                tabBarStyle: {
+                    height: 0,
+                    alignSelf: "center",
+                    width: '50%',
+                    borderRadius: 100,
+                    borderColor: "white",
+                    backgroundColor: "rgba(0,0,0,0.0)",
+                    elevation: 5, // shadow on Android
+                    shadowOpacity: .10, // shadow on iOS,
+                    shadowRadius: 4, // shadow blur on iOS
+                    position: 'absolute',
+                    top: 100,
+                    borderBottomColor: 'white'
+                },
+                tabBarItemStyle: {
+                    color: 'white',
+                    position: 'absolute',
+                    top: 75,
+                    borderBottomColor: 'white'
+                },
+                tabBarLabelStyle: {
+                    color: 'white',
+                    position: 'absolute',
+                    top: 75
+                }
+            }} style={{ backgroundColor: 'rgba(0,0,0,0.0)' }} initialRouteName={selection}>
+                <Tab.Screen name="friends" children={() => <FriendsFeedView selection={selection} geopics={friendGeopics} tap={tap} setTap={setTap} setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} /> } />
+                <Tab.Screen name="nearby" children={() => <NearbyFeedView selection={selection} geopics={nearbyGeopics} clusters={props.data.clusters} tap={tap} setTap={setTap} setComments={setComments} setCurrentGeopic={setCurrentGeopic} sheetRef={sheetRef} /> } />
+            </Tab.Navigator>
             <StatusBar style="light" />
         </View>
     )

@@ -722,16 +722,10 @@ export const addFriend = async (userID) => {
     const requests = mongodb.db('users').collection('requests');
     const users = mongodb.db('users').collection('info');
     const currentID = await AsyncStorage.getItem('userID');
-    console.log(currentID);
-    const currentTime = new Date();
-    await requests.insertOne({
-      _id: new ObjectId(),
-      _partition: `${userID}`,
-      userID: currentID,
-      timestamp: `${currentTime}`
-    });
+    let username = '';
 
     users.findOne({_partition: currentID}).then(async (currentUser) => {
+      username = currentUser.username;
       let newFriends;
       if(currentUser.friends == null){
         newFriends = [];
@@ -742,8 +736,18 @@ export const addFriend = async (userID) => {
         newFriends.push(`${userID} pending`)
         await users.updateOne({_partition: currentID}, {$set: {friends: newFriends}});
       }
-    });
 
+      console.log(currentID);
+      const currentTime = new Date();
+      await requests.insertOne({
+        _id: new ObjectId(),
+        _partition: `${userID}`,
+        userID: currentID,
+        timestamp: `${currentTime}`,
+        username: username,
+  
+      });
+    });
     //addPendingFriend(realm, userID, currentID);
 
 }
@@ -792,12 +796,12 @@ export const acceptRequest = async (userID) => {
 }
 
 export const declineRequest = async (userID) => {
-    const requests = mongodb.db('users').collection('requests');
-    await requests.deleteOne({_partition: currentUser, userID: userID});
-
     const currentID = await AsyncStorage.getItem('userID');
-    const users = mongodb.db('users').collection('users');
-    const user = users.findOne({_partition: userID});
+    const requests = mongodb.db('users').collection('requests');
+    await requests.deleteOne({_partition: currentID, userID: userID});
+
+    const users = mongodb.db('users').collection('info');
+    const user = await users.findOne({_partition: userID});
     const newFriends = [];
     user.friends.map((friend) => {
       if(friend !== `${currentID} pending`){

@@ -108,6 +108,7 @@ export const openUserRealm = async (dispatch, register, login, userID, expoPushT
 
     dispatch(setMessageData(conversations));
     dispatch(setRequests(requests));
+    console.log(requests);
 
     let unreadCount = 0;
     conversations.map((conversation) => {

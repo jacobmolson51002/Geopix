@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, ImageBackground, ScrollView, TouchableOpacity, Text, View, Button, TextInput, ActivityIndicator } from 'react-native';
-import { getUserInformation, getUser, addFriend } from '../backend/database';
+import { getUserInformation, getUsername, addFriend } from '../backend/database';
 import { checkFriendStatus } from '../backend/realm';
 import { useSelector } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,7 +20,7 @@ export const ProfileView = ({ navigation, route }) => {
 
     if(rerender){
         setRerender(false);
-        getUser(userID).then((user) => {
+        getUsername(userID).then((user) => {
             checkFriendStatus(userRealm, userID).then((friendStatus) => {
                 console.log(friendStatus);
                 setStatus(friendStatus);

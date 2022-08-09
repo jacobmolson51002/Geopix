@@ -3,97 +3,20 @@ import { SafeAreaView, Text, View, Button, TextInput, ScrollView, KeyboardAvoidi
 import { logUserOut } from '../backend/realm';
 import { getUser, acceptRequest, declineRequest, getTime } from '../backend/database';
 import { useSelector } from 'react-redux';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { ProfileView } from './ProfileView';
 
-
-export const Message = ({ conversation }) => {
-    console.log(conversation);
-    const [username, setUsername] = useState('');
-    const [rerender, setRerender] = useState(true);
-    /*if(rerender){
-        setRerender(false);
-        getUser(conversation.recipients[0]).then((user) => {
-            console.log(user.username);
-            setUsername(user.username);
-        });
-    }*/
-
-    const [timeStamp, units] = getTime(conversation.timestamp);
-
-    const styles = {
-        messageDate: {
-            color: '#bebebe',
-            fontSize: 12
-        },
-        conversation: {
-            width: '100%',
-            marginBottom: 25
-        },
-        recipient: {
-            fontWeight: 'bold',
-            color: 'white',
-            marginBottom: 5,
-            fontSize: 15
-        },
-        lastMessage: {
-            fontSize: 13,
-            color: 'blue'
-        },
-        newMessage: {
-            fontSize: 13,
-            color: 'white'
-        },
-        newMessageContainer: {
-            display: 'flex',
-            position: 'absolute',
-            right: 10,
-            top: '50%',
-            height: '100%',
-            justiftyContent: 'center',
-            alignItems: 'center',
-            width: 10
-        },
-        newMessageIcon: {
-            height: 10,
-            width: 10,
-            borderRadius: 25,
-            backgroundColor: 'turquoise'
-        },
-        messageDisplay: {
-            width: '80%'
-        }
-
-    }
-    //<View style={{ display: 'flex', flexDirection: 'row' }}><Text style={styles.geopicInfo}><TouchableOpacity onPress={() => {navigation.navigate('profileView', {userID: conversation.recipients[0]})}}><Text style={styles.recipient}>{conversation.usernames[0]}</Text></TouchableOpacity><View style={{ margin: 0,padding:0 }}><Text style={{ color: 'white', fontSize: 18 }}>    •   something</Text><View/></Text></View> 
-    //<View><Text style={styles.geopicInfo}><TouchableOpacity style={{ margin: 0,padding: 0, boxShadow: '' }} onPress={() => {profile(geopic.userID)}}><Text style={styles.geopicInfo}>{geopic.username}</Text></TouchableOpacity><View style={{ margin: 0,padding:0 }}><Text style={styles.geopicInfo}>•    {Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}</Text></View></Text></View>
-    return(
-        <TouchableOpacity key={index} onPress={() => {navigation.navigate('Message', {conversationID: conversation.conversationID, conversationPrimaryID: conversation._id, recipients: conversation.recipients, newConversation: false});}} style={styles.conversation}>
-            
-            <View><Text style={styles.geopicInfo}><TouchableOpacity style={{ margin: 0, padding: 0 }} onPress={navigation.navigate('profileView', {userID: conversation.recipients[0]})}><Text style={styles.geopicInfo}>{conversation.usernames[0]}</Text></TouchableOpacity><View style={{ margin: 0, padding: 0 }}><Text style={styles.geopicInfo}>•    {Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}</Text></View></Text></View>
-            
-            <View style={styles.messageDisplay}>
-            <Text  style={conversation.unread > 0 ? styles.newMessage : styles.lastMessage}>{conversation.lastMessage}</Text>
-            </View>
-            {conversation.unread > 0 ? (
-                <View style={styles.newMessageContainer}>
-                    <View style={styles.newMessageIcon} />
-                </View>
-            ) : (
-                <View />
-            )}
-        </TouchableOpacity>
-    )
-    //{Math.floor(timeStamp)} {units} {timeStamp === "now" ? "" : "ago"}
-}
-
-export const Inbox = ({ navigation, route }) => {
+export const InboxView = ({ navigation, route }) => {
 
     const userReducer = useSelector(state => state.userReducer);
     const conversations = userReducer.conversations;
     const activityList = userReducer.requests;
     const [timestamps, setTimestamps] = useState(null);
+    const [seeAllActivity, setSeeAllActivity] = useState(false);
     console.log('rendered');
 
-    useEffect(() => {
+    /*useEffect(() => {
         let newTimestamps = []
         conversations.map((conversation) => {
             const [timeStamp, units] = getTime(conversation.timestamp);
@@ -101,10 +24,10 @@ export const Inbox = ({ navigation, route }) => {
         });
         setTimestamps(newTimestamps);
 
-    })
+    })*/
 
-    const viewProfile = () => {
-
+    const viewProfile = (userID) => {
+        navigation.navigate('viewProfile', {userID: userID});
     }
 
     const acceptRequestClicked = async (userID) => {
@@ -172,47 +95,66 @@ export const Inbox = ({ navigation, route }) => {
             backgroundColor: 'turquoise'
         },
         request: {
-            height: 60
+            marginBottom: 25,
+            marginLeft: 0,
+            paddingLeft: 0
         },
         requestNameSection: {
             flex: 3,
-            padding: 5,
             display: 'flex',
-            alignItems: 'center'
+            marginLeft: 0,
+            paddingLeft: 0,
+            display: 'flex',
+            flexDirection: 'row'
         },
         requestName: {
             color: 'white',
             fontSize: 15,
             fontWeight: 'bold'
         },
+        requestLine: {
+            color: 'white',
+            fontSize: 15
+        },
         requestButtons: {
             flex: 2,
             display: 'flex',
-            flexDirection: 'row',
-            justiftyContent: 'center',
-            alignItems: 'center'
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: 5,
+            width: '100%',
+
         },
         acceptRequestButton: {
-            height: '95%',
             backgroundColor: 'turquoise',
             borderRadius: 10,
             display: 'flex',
             justiftyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
+            paddingLeft: 10,
+            paddingRight: 10,
+            paddingTop: 5,
+            paddingBottom: 5,
+            marginRight: 5
         },
         acceptRequestText: {
-            color: 'white'
+            color: 'white',
+            fontWeight: 'bold'
         },
         declineRequestButton: {
-            height: '95%',
             backgroundColor: '#bebebe',
             borderRadius: 10,
             display: 'flex',
             justiftyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
+            paddingLeft: 10,
+            paddingRight: 10,
+            paddingTop: 5,
+            paddingBottom: 5,
         },
         declineRequestText: {
-            color: 'white'
+            color: 'white',
+            fontWeight: 'bold'
         },
         messageDate: {
             fontWeight: 'bold',
@@ -222,6 +164,9 @@ export const Inbox = ({ navigation, route }) => {
         },
         messageDisplay: {
             width: '80%'
+        },
+        seeMore: {
+            marginBottom: 20
         }
     }
 
@@ -235,22 +180,35 @@ export const Inbox = ({ navigation, route }) => {
                 {activityList.map((request, index) => {
                     //console.log(usernames);
                     //console.log(usernames[index]);
-                    return(
+                    return (!seeAllActivity && index > 2) ? (
+                        <View key={index}/>
+                    ) : (
                         <View key={index} style={styles.request} >
-                            <TouchableOpacity onPress={viewProfile} style={styles.requestNameSection}>
-                                <Text style={styles.requestName}>{request.userID} would like to be friends.</Text>
-                            </TouchableOpacity>
+                            <View style={styles.requestNameSection}>
+                                <TouchableOpacity onPress={() => {viewProfile(request.userID)}}><Text style={styles.requestName}>{request.username}</Text></TouchableOpacity><Text style={styles.requestLine}> would like to be friends.</Text>
+                            </View>
                             <View style={styles.requestButtons}>
-                                <TouchableOpacity onPress={() => {acceptRequestClicked(request.userID)}} style={styles.acceptRequestButton}>
-                                    <Text style={styles.acceptRequestText}>accept</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => {declineRequestClicked(request._partition)}} style={styles.declineRequestButton}>
-                                    <Text style={styles.declineRequestText}>decline</Text>
-                                </TouchableOpacity>
+                                <View style={{ display: 'flex', flexDirection: 'row' }}>
+                                    <TouchableOpacity onPress={() => {acceptRequestClicked(request.userID)}} style={styles.acceptRequestButton}>
+                                        <Text style={styles.acceptRequestText}>accept</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => {declineRequestClicked(request.userID)}} style={styles.declineRequestButton}>
+                                        <Text style={styles.declineRequestText}>decline</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
                     )
                 })}
+                {activityList.length > 3 ? (
+                    <View style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <TouchableOpacity activeOpacity={1} style={styles.seeMore} onPress={() => {setSeeAllActivity(!seeAllActivity)}}>
+                            <Text style={{ color: '#bebebe' }}>{seeAllActivity ? "See less" : "See all"}</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <View />
+                )}
             </View>
             </View>
             ) : (
@@ -282,4 +240,14 @@ export const Inbox = ({ navigation, route }) => {
         </ScrollView>
         </SafeAreaView>
     ) 
+}
+
+export const Inbox = ({ navigation, route }) => {
+    const Stack = createNativeStackNavigator();
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="inbox" >
+        <Stack.Screen name="inbox" component={InboxView} />
+        <Stack.Screen name='viewProfile' component={ProfileView} />
+      </Stack.Navigator> 
+    )
 }

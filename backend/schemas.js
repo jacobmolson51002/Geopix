@@ -62,6 +62,7 @@ export const Request = {
         _partition: "string",
         userID: "string",
         timestamp: 'string',
+        username: 'string',
     },
     primaryKey: '_id'
 }
